@@ -1,0 +1,34 @@
+name: Build Readme
+
+on:
+  push:
+    tags: [ '*' ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 16.x
+
+    - name: build readme
+      run: |
+        npm i -f
+        npm run build-docs
+      env:
+        NPM_TOKEN: ${{ secrets.npm_token }}
+    - name: auto-commit
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: 'build readme file'
