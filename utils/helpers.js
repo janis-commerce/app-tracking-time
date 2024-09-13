@@ -9,6 +9,10 @@ import {isSameDay, differenceInMilliseconds} from 'date-fns';
         return  !!(obj && obj.constructor === Object);
     }
 
+    static isArray(arr) {
+        return !!(arr instanceof Array);
+    }
+
     /**
      * 
      * @param {Array} arr 

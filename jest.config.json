@@ -10,17 +10,14 @@
 	"coverageReporters": ["html", "text"],
 	"coverageDirectory": "coverage",
 	"collectCoverageFrom": [
-	  "lib/**",
+	  "lib/event-tracker.js**",
 	  "!**/node_modules/**",
 	  "!**/vendor/**",
-	  "!**/ios/**",
-	  "!**/android/**",
 	  "!**/env/**",
-	  "!<rootDir>/index.js",
 	  "!<rootDir>/coverage",
 	  "!**/jestMocks/**"
 	],
-	"coveragePathIgnorePatterns": ["/node_modules/", "<rootDir>/index.js"],
+	"coveragePathIgnorePatterns": ["/node_modules/"],
 	"coverageThreshold": {
 	  "global": {
 		"branches": 100,
@@ -28,5 +25,11 @@
 		"lines": 100,
 		"statements": 100
 	  }
-	}
+	},
+	"transform": {
+	  "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
+	},
+	"transformIgnorePatterns": [
+	  "node_modules/(?!(react-native)/)"
+	]
   }
