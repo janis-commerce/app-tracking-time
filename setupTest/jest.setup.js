@@ -11,13 +11,11 @@ jest.mock('date-fns', () => {
 
 jest.mock('react-native', () => {
 	return {
-	  // Simula solo lo que necesitas para tus pruebas
 	  AppState: {
 		addEventListener: jest.fn(),
 		removeEventListener: jest.fn(),
-		currentState: 'active', // Puedes ajustar esto según sea necesario
+		currentState: 'active',
 	  },
-	  // Agrega otros módulos que necesites mockear aquí
 	};
   });
 
