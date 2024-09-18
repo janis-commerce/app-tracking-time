@@ -119,6 +119,6 @@ If any of the events you want to pause is already paused, what will happen is th
 ### Sequence of recorded events
 
 The package has internal validations that prevent events from being saved consecutively or that do not have coherence depending on the event that has been saved prior to this one.
-For example, you will not be able to store 2 pause type events consecutively. Additionally, saving any event related to an identification that has already been completed is also not allowed.
+For example, you will not be able to store 2 pause type events consecutively. Additionally, saving any event related to an ID that has already been finished is also not allowed.
 
 If you want to know what was the last event that was stored for a particular id, you can call the getLastEventById method, which will return an object with the information of the last stored event, including the type.
