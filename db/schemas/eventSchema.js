@@ -6,8 +6,8 @@ class EventSchema extends Realm.Object{
         properties: {
             id: {type:'string', indexed: true},
             time: {type: 'date'},
-            type:'string',
-            payload: {type: 'mixed'}
+            type: {type: 'string'},
+            payload: {type: 'string'}
         }
     }
 }

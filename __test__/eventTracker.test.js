@@ -89,10 +89,10 @@ describe('EventTracker class', () => {
          })
     })
 
-    describe('getLastEventTypeById mehtod', () => { 
+    describe('getLastEventById mehtod', () => { 
         describe('throws an error', () => { 
             it('when received id is invalid', () => {
-                expect(eventTracker.getLastEventTypeById(null)).rejects.toThrow('ID is invalid or null')
+                expect(eventTracker.getLastEventById(null)).rejects.toThrow('ID is invalid or null')
             })
         })
         
@@ -103,9 +103,9 @@ describe('EventTracker class', () => {
                 {id:'345',type:'resume'}
             ]);
 
-            const typeResponse = await eventTracker.getLastEventTypeById('345');
+            const typeResponse = await eventTracker.getLastEventById('345');
 
-            expect(typeResponse).toStrictEqual('resume');
+            expect(typeResponse).toStrictEqual({id:'345',type:'resume'});
         })
     })
 
@@ -219,10 +219,10 @@ describe('EventTracker class', () => {
         })
     })
 
-    describe('isEventAlreadyStarted method', () => { 
+    describe('isEventStarted method', () => { 
         describe('throws an error when', () => { 
             it('id is invalid or null', () => {
-                expect(eventTracker.isEventAlreadyStarted()).rejects.toThrow('ID is invalid or null')
+                expect(eventTracker.isEventStarted()).rejects.toThrow('ID is invalid or null')
             })
         })
 
@@ -230,14 +230,14 @@ describe('EventTracker class', () => {
             it('if id is started, return true', async () => {
                 searchFn.mockResolvedValueOnce([{id:'123',type:'start'}])
 
-                const response = await eventTracker.isEventAlreadyStarted('123');
+                const response = await eventTracker.isEventStarted('123');
 
                 expect(response).toBeTruthy()
             })
 
             it('return false when the id wasnt initialized', async () => {
                 searchFn.mockResolvedValueOnce([]);
-                const response = await eventTracker.isEventAlreadyStarted('345');
+                const response = await eventTracker.isEventStarted('345');
 
                 expect(response).toBeFalsy();
                 
@@ -251,7 +251,7 @@ describe('EventTracker class', () => {
                 searchFn.mockRejectedValueOnce('error');
 
                 const [, error] = await Helpers.promiseWrapper(
-                    eventTracker.stopEventsInBackground()
+                    eventTracker._stopEventsInBackground()
                 )
 
                 expect(error.message).toStrictEqual('error')
@@ -262,7 +262,7 @@ describe('EventTracker class', () => {
             it('database ids were not obtained', async () => {
                 searchFn.mockResolvedValueOnce([]);
 
-                const response = await eventTracker.stopEventsInBackground();
+                const response = await eventTracker._stopEventsInBackground();
 
                 expect(response).toBeNull();
             })
@@ -275,7 +275,7 @@ describe('EventTracker class', () => {
                     .mockResolvedValueOnce([{id:'12345',type:'start'}])
                     .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
 
-                const response = await eventTracker.stopEventsInBackground();
+                const response = await eventTracker._stopEventsInBackground();
 
                 expect(response).toBeTruthy();
             })
