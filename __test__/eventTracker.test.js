@@ -100,12 +100,12 @@ describe('EventTracker class', () => {
             searchFn.mockResolvedValueOnce([
                 {id:'345',type:'start'},
                 {id:'345',type:'pause'},
-                {id:'345',type:'resume'}
+                {id:'345',type:'resume',payload: '{"userId":"123","warehouseId":"123-wh"}', time:'2023-01-01T00:00:00.000Z'}
             ]);
 
             const typeResponse = await eventTracker.getLastEventById('345');
 
-            expect(typeResponse).toStrictEqual({id:'345',type:'resume'});
+            expect(typeResponse).toStrictEqual({id:'345',type:'resume',time:'2023-01-01T00:00:00.000Z',payload: {userId:'123',warehouseId:'123-wh'}});
         })
     })
 
