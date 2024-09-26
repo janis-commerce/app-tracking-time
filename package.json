@@ -1,6 +1,6 @@
 {
   "name": "@janiscommerce/app-tracking-time",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A package for managing the times of actions in applications",
   "main": "lib/event-tracker.js",
   "scripts": {
