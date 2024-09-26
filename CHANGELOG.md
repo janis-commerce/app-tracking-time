@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2024-09-26
+
+### Changed
+
+- Event validation update: Now only allows adding finish events after tracking is completed.
+- _stopEventsInBackground improvement: Added validation to pause only active events
+- getElapsedTime adjustment: Time calculations now use the last finish event when multiple are present.
+
+### Added
+
+- Added removeFinishById method to delete all finish records by ID, returning a rejected promise on failure
+
 ## [1.0.0] - 2024-09-19
 
 ### Added
