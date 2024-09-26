@@ -13,14 +13,6 @@ import {isSameDay, differenceInMilliseconds} from 'date-fns';
         return !!(arr instanceof Array);
     }
 
-    /**
-     * 
-     * @param {Array} arr 
-     */
-    static reverseArray(arr) {
-        return arr.reverse()
-    }
-
     static findEventByStatus(arr, status) {
         return arr.find((value) => value?.type === status)
     }

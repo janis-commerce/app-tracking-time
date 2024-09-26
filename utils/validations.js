@@ -35,7 +35,7 @@ class Validations {
 
     static validateEventsSequence (type,previousType = '') {
 
-        if(previousType === 'finish') throw new EventTrackerError(`Forbidden event: record is already finished`)
+        if(previousType === 'finish' && type !== 'finish') throw new EventTrackerError(`Forbidden event: record is already finished`)
         switch(type) {
             case 'start': 
                 if(previousType === 'start') throw new EventTrackerError(`Forbidden event: only one start record is allowed`);

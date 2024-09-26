@@ -6,12 +6,14 @@ jest.mock('../lib/database')
 describe('EventTracker class', () => { 
 
     const eventTracker = new EventTracker('timetracker');
+    const saveFn = Database.prototype.save;
     const searchFn = Database.prototype.search;
     const deleteFn = Database.prototype.delete;
     const deleteAllFn = Database.prototype.deleteAll;
 
     const diffTimeMock = jest.spyOn(Helpers,'getTimeDifference')
     const mockDate = new Date('2023-01-01T00:15:00.000Z');
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     describe('return methods to handler time events', () => { 
         it('when the class is instantiated', () => {
@@ -258,27 +260,90 @@ describe('EventTracker class', () => {
             })
          })
 
-         describe('return null when', () => { 
+         describe('return empty array when', () => { 
             it('database ids were not obtained', async () => {
                 searchFn.mockResolvedValueOnce([]);
 
                 const response = await eventTracker._stopEventsInBackground();
 
-                expect(response).toBeNull();
+                expect(response).toStrictEqual([])
             })
         })
 
         describe('return an array with paused times when', () => { 
             it('ids are valid and this is not paused', async () => {
+                saveFn
+                    .mockResolvedValueOnce({})
+
                 searchFn
                     .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
                     .mockResolvedValueOnce([{id:'12345',type:'start'}])
+                    .mockResolvedValueOnce([{id:'12345',type:'start'}])
                     .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
+                
+                
 
                 const response = await eventTracker._stopEventsInBackground();
 
-                expect(response).toBeTruthy();
+                expect(response.length).toBe(1);
             })
-         })
+
+            it('ignore elements that throws errors when try to obtain last event',  async () => {
+
+                searchFn
+                    .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
+                    .mockRejectedValueOnce(new Error('database error'))
+                    .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
+                
+
+                const response = await eventTracker._stopEventsInBackground();
+
+                expect(response).toStrictEqual([])
+            })
+
+            it('ignore elements that throws errors when try to obtain last event',  async () => {
+                searchFn
+                    .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
+                    .mockResolvedValueOnce([{id:'12345',type:'start'}])
+                    .mockRejectedValueOnce(new Error('database error'))
+                    .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
+                
+
+                const response = await eventTracker._stopEventsInBackground();
+
+                expect(response).toStrictEqual([])
+            })
+
+            it('ignore elements that throws errors when try to obtain last event',  async () => {
+                saveFn
+                    .mockRejectedValueOnce(new Error('invalid id'))
+                searchFn
+                    .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
+                    .mockResolvedValueOnce([{id:'12345',type:'start'}])
+                    .mockRejectedValueOnce(new Error('database error'))
+                    .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
+                
+
+                const response = await eventTracker._stopEventsInBackground();
+
+                expect(response).toStrictEqual([])
+            })
+        })
+    })
+
+    describe('removeFinishById method', () => { 
+        it('remove finish event when delete database method resolved correctly', async () => {
+            deleteFn.mockResolvedValueOnce();
+
+            await eventTracker.removeFinishById('123')
+
+            expect(deleteFn).toHaveBeenCalled();
+        })
+
+        it('return a reject promise when delete method fails', async () => {
+            deleteFn.mockRejectedValueOnce(new Error('delete error'));
+
+            await expect(eventTracker.removeFinishById('123')).rejects.toThrow('delete error')
+        })
      })
  })
