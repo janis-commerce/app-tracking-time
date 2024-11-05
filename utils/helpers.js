@@ -45,25 +45,24 @@ import {isSameDay, differenceInMilliseconds} from 'date-fns';
         return formatDifference;
     }
 
+    static _mappedFilters(filters) {
+        if(!filters?.length || !this.isArray(filters)) return [];
+        
+        return filters.map((filter,index) => `${filter}${index}`) 
+    }
+
     static getFilters(values) {
         const {id, type} = values;
         const validID = id && this.isString(id);
         const validType = type && this.isString(type);
-        let filters = '';
+        let filters = [
+            (validID && 'id LIKE[c] $'),
+            (validType && 'type = $')
+        ].filter(Boolean);
 
-        if(validID) {
-            filters = filters.concat("id LIKE[c] $0")
-        }
+        filters = this._mappedFilters(filters)
 
-        if(validID && validType) {
-            filters = filters.concat(" && type = $1")
-        }
-
-        if(!validID && validType) {
-            filters = filters.concat("type = $0")
-        }
-
-        return filters;
+        return filters.join(' && ')
     }
 
     static promiseWrapper(promise) {
