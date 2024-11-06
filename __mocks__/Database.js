@@ -5,22 +5,37 @@ class Database {
   
     async save() {
       // Simula el guardado del evento sin hacer nada
-      return Promise.resolve();
+      return Promise;
     }
   
     async search() {
-      // Simula una búsqueda, devolviendo una lista de eventos vacía o lo que necesites
-      return [];
+      // Simula una búsqueda
+      return Promise;
     }
   
     async delete() {
       // Simula la eliminación de eventos
-      return Promise.resolve();
+      return Promise;
     }
   
     async deleteAll() {
       // Simula la eliminación de todos los eventos
-      return Promise.resolve();
+      return Promise;
+    }
+
+    async isFolderExist() {
+      // Simula la llamada al método 'exists' de RNFS para validar si la carpeta existe
+      return Promise;
+    }
+
+    async removeDatabaseFolder() {
+      // Simula la eliminación de la carpeta de la base de datos mediante 'unlink' de RNFS
+      return Promise;
+    }
+
+    async createDatabaseFolder() {
+      // Simula la creación de la carpeta de la base de datos mediante 'mkdir' de RNFS;
+      return Promise;
     }
   }
   
