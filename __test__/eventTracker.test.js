@@ -1,9 +1,6 @@
 import EventTracker from "../lib/event-tracker";
 import Database from "../lib/database";
 import Helpers from "../utils/helpers";
-import { finishEvent, startEvent } from "../__mocks__/events";
-
-
 
 jest.mock('../lib/database')
 
@@ -21,9 +18,7 @@ describe('EventTracker class', () => {
     const searchFn = Database.prototype.search;
     const deleteFn = Database.prototype.delete;
     const deleteAllFn = Database.prototype.deleteAll;
-    const isFolderExistFn = Database.prototype.isFolderExist;
     const removeDatabaseFolderFn = Database.prototype.removeDatabaseFolder;
-    const createDatabaseFolderFn = Database.prototype.createDatabaseFolder;
 
     const diffTimeMock = jest.spyOn(Helpers,'getTimeDifference')
     const mockDate = new Date('2023-01-01T00:15:00.000Z');
@@ -35,15 +30,6 @@ describe('EventTracker class', () => {
             expect(typeof eventTracker.addEvent).toBe('function');
         })
     })
-
-    describe('hasFolder getter', () => { 
-        it('should return hasTrackingFolder private state', () => {
-            const foldetState = eventTracker.hasFolder;
-
-            expect(typeof foldetState).toBe('boolean')
-        })
-     })
-
     describe('addEvent method', () => { 
         describe('throws an error when', () => { 
             it('passed id is invalid',async () => {
@@ -354,98 +340,44 @@ describe('EventTracker class', () => {
         })
     })
 
-    describe('getTimeRangeById method', () => { 
-          describe('throws an error when', () => { 
+    describe('getIdTimeByType method', () => { 
+        describe('throws an error when', () => { 
             it('passed id is invalid',async () => {
-                expect(eventTracker.getTimeRangeById(null)).rejects.toThrow('ID is invalid or null') 
-            })
-          })
-
-          describe('returns start and finish time', () => { 
-            it('should return an object with start and finish time', async () => {
-                searchFn
-                    .mockResolvedValueOnce([startEvent])
-                    .mockResolvedValueOnce([finishEvent])
-
-                const startTime = startEvent.time;
-                const finishTime = finishEvent.time;
-                
-                const response = await eventTracker.getTimeRangeById('123456')
-
-                expect(response).toStrictEqual({
-                    startTime,
-                    finishTime
-                })
+                expect(eventTracker.getIdTimeByType()).rejects.toThrow('ID is invalid or null') 
             })
 
-            it('should return only start time if finish time databse request fails', async () => {
-                searchFn
-                    .mockResolvedValueOnce([startEvent])
-                    .mockRejectedValueOnce('error')
-
-                    const startTime = startEvent.time;
-                    
-                    const response = await eventTracker.getTimeRangeById('123456')
-    
-                    expect(response).toStrictEqual({
-                        startTime,
-                        finishTime: null
-                })
-            })
-
-            it('should return only start time if finish time databse request fails', async () => {
-                searchFn
-                    .mockRejectedValueOnce('error')
-                    .mockResolvedValueOnce([finishEvent])
-
-                    const finishTime = finishEvent.time;
-                    
-                    const response = await eventTracker.getTimeRangeById('123456')
-    
-                    expect(response).toStrictEqual({
-                        startTime: null,
-                        finishTime
-                })
-            })
-
-            it('should return null start time if database request return a register without time', async () => {
-                searchFn
-                    .mockResolvedValueOnce([{id:'23456',type:'start',payload:{}}])
-                    .mockResolvedValueOnce([finishEvent])
-
-                const finishTime = finishEvent.time;
-                
-                const response = await eventTracker.getTimeRangeById('123456')
-
-                expect(response).toStrictEqual({
-                    startTime: null,
-                    finishTime
-                })
-            })
-
-            it('should return null finish time or finish time if database request return a register without time', async () => {
-                searchFn
-                    .mockResolvedValueOnce([startEvent])
-                    .mockResolvedValueOnce([{id:'23456',type:'finish',payload:{}}])
-
-                const startTime = startEvent.time;
-                
-                const response = await eventTracker.getTimeRangeById('123456')
-
-                expect(response).toStrictEqual({
-                    startTime,
-                    finishTime: null
-                })
+            it('passed type is invalid',async () => {
+                expect(eventTracker.getIdTimeByType('123','fakeStart')).rejects.toThrow("Event type is invalid") 
             })
         })
-    })
 
-    describe('wipeDatabase method', () => { 
+        describe('return null', () => { 
+            it('should return null when finded event not contains time key', async () => {
+                searchFn.mockResolvedValueOnce([{id:'123',type:'start',payload:{}}])
+
+                const time = await eventTracker.getIdTimeByType('123','start');
+
+                expect(time).toBeNull();
+            })
+         })
+
+        describe('return time value', () => { 
+            it('should return time register value when has valid type, valid id and valid time', async () => {
+                searchFn.mockResolvedValueOnce([{id:'123',type:'start',payload:{}, time: '2023-01-02T00:00:00.000Z'}])
+
+                const time = await eventTracker.getIdTimeByType('123','start');
+
+                expect(time).toStrictEqual('2023-01-02T00:00:00.000Z')
+            })
+         })
+     })
+
+    describe('removeEventsFolder method', () => { 
         describe('delete database', () => { 
             it('should delete database if removeDatabase complete successfully', async () => {
                 removeDatabaseFolderFn.mockResolvedValueOnce();
 
-                await eventTracker.wipeDatabase();
+                await eventTracker.removeEventsFolder();
 
                 expect(removeDatabaseFolderFn).toHaveBeenCalled();
             })
@@ -453,38 +385,8 @@ describe('EventTracker class', () => {
             it('should return a reject promise when remove method fails', async () => {
                 removeDatabaseFolderFn.mockRejectedValueOnce(new Error('delete error'));
 
-                await expect(eventTracker.wipeDatabase()).rejects.toThrow('delete error')
+                await expect(eventTracker.removeEventsFolder()).rejects.toThrow('delete error')
             })
-         })
-    })
-
-    describe('handleFolderStateChange private method', () => { 
-        describe('should handle change in folder property state', () => { 
-            it('if change to true shouldnt do anything', () => {
-                eventTracker.hasFolder = true;
-
-                expect(createDatabaseFolderFn).not.toHaveBeenCalled();
-            })
-
-            describe('if change to true, should call createDatabaseFolder', () => { 
-                it('if createDatabaseFolder complete successfully should set hasFolder in true', async () => {
-                    createDatabaseFolderFn.mockResolvedValueOnce()
-
-                    eventTracker.hasFolder = false;
-
-                    await eventTracker._handleFolderStateChange()
-
-                    expect(eventTracker.hasFolder).toBe(true)
-                })
-
-                it('if createDatabaseFolder fails return null', async () => {
-                    createDatabaseFolderFn.mockRejectedValueOnce(new Error('create error'))
-
-                    eventTracker.hasFolder = false;
-
-                    expect(eventTracker.hasFolder).toBe(false)
-                })
-             })
          })
     })
  })
