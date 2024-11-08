@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2024-11-08
+
+### Added
+
+- Added method to remove events database folder.
+
+### Changed
+
+- Changed getElapsedTime to calculate elapsed time from two dates received by params.
+
 ## [1.1.0] - 2024-09-26
 
 ### Changed

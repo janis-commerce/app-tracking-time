@@ -23,7 +23,7 @@ class Database {
       return Promise;
     }
 
-    async isFolderExist() {
+    async isFolderAvailable() {
       // Simula la llamada al método 'exists' de RNFS para validar si la carpeta existe
       return Promise;
     }
