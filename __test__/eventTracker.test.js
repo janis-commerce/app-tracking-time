@@ -389,4 +389,28 @@ describe('EventTracker class', () => {
             })
          })
     })
+
+    describe('isFocused getter and setFocused setter', () => { 
+        it('should return _appFocused property value', () => {
+            const state = eventTracker.isFocused;
+
+            expect(typeof state).toStrictEqual('boolean')
+
+
+        })
+
+        it('should set new _appFocused state', () => {
+            eventTracker.setFocus = true;
+            const state = eventTracker.isFocused;
+
+            expect(state).toBeTruthy();
+        }) 
+
+        it('shouldn t set new appFocused state if value isnt a boolean', () => {
+            eventTracker.setFocus = 3;
+            const state = eventTracker.isFocused;
+
+            expect(state).toBeTruthy();
+        })
+     })
  })
