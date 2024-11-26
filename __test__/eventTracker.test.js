@@ -123,7 +123,11 @@ describe('EventTracker class', () => {
 
         describe('return default elapsedTime', () => { 
             it('should return default elapsedTime when startTime is null', () => {
-                expect(eventTracker.getElapsedTime()).toStrictEqual(DEFAULT_ELAPSED_TIME)
+                expect(eventTracker.getElapsedTime({})).toStrictEqual(DEFAULT_ELAPSED_TIME)
+            })
+
+            it('should return 0 when startTime is null and formatted is false', () => {
+                expect(eventTracker.getElapsedTime({formatted:false})).toStrictEqual(0)
             })
          })
 
@@ -139,7 +143,7 @@ describe('EventTracker class', () => {
                     seconds:0
                 })
 
-                const response = eventTracker.getElapsedTime(startTime,finishTime)
+                const response = eventTracker.getElapsedTime({startTime,finishTime})
                 expect(response).toStrictEqual({
                     days:0,
                     hours:0,
@@ -152,23 +156,15 @@ describe('EventTracker class', () => {
          it('but, if the id hasnt finish time, la comparación se realizará contra la hora actual', async () => {
             jest.spyOn(mockDate, 'toISOString').mockReturnValueOnce('2023-01-01T00:15:00.000Z');
 
-            diffTimeMock.mockReturnValueOnce({
-                days:0,
-                hours:0,
-                minutes:15,
-                seconds:0
-            })
+            diffTimeMock.mockReturnValueOnce(60116031652)
 
             const startTime = '2023-01-01T00:00:00.000Z';
 
-            const response = eventTracker.getElapsedTime(startTime)
+            const response = eventTracker.getElapsedTime({startTime, formatted: false})
 
-            expect(response).toStrictEqual({
-                days:0,
-                hours:0,
-                minutes:15,
-                seconds:0
-            })
+            console.log('response', response)
+
+            expect(response).toStrictEqual(60116031652)
          })
     })
 
