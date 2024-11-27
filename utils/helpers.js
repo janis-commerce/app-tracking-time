@@ -21,13 +21,15 @@ import {isSameDay, differenceInMilliseconds} from 'date-fns';
         return arr.slice().reverse()
     }
 
-    static getTimeDifference (start, end) {
+    static getTimeDifference (start, end, formatted) {
         const parsedStart = new Date(start);
         const parsedEnd = new Date(end);
         const sameDay = isSameDay(parsedStart, parsedEnd);
         const miliseconds = differenceInMilliseconds(parsedEnd, parsedStart);
         const seconds = Math.floor(miliseconds / 1000);
         const hours = Math.floor(seconds / 3600);
+
+        if(!formatted) return miliseconds;
         
         const days = sameDay ? 0 : Math.floor(hours / 24);
         const minutes = Math.floor((seconds % 3600) / 60);
