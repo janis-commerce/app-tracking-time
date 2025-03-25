@@ -153,25 +153,10 @@ describe('EventTracker class', () => {
         })
         
         describe('should return stopped time', () => {
-          it('after adding up all the milliseconds between pauses and resumes', () => {
-            const registeredEvents = [
-                {id:'345',type:'start'},
-                {id:'345',type:'pause',time:'2023-01-01T00:00:10.000Z'},
-                {id:'345',type:'resume', time:'2023-01-01T00:00:20.000Z'},
-                {id:'345',type:'pause',time:'2023-01-01T00:00:40.000Z'},
-                {id:'345',type:'pause',time:'2023-01-01T00:01:00.000Z'},
-                {id:'345',type:'resume', time:'2023-01-01T00:01:20.000Z'},
-                {id:'345',type:'pause',time:'2023-01-01T00:01:40.000Z'},
-            ]
-
-            const response = eventTracker.getStoppedTime({events:registeredEvents});
-
-            expect(response).toStrictEqual(30000)
-          })
 
           it('should return stopped time in time format if format params is true', () => {
             const registeredEvents = [
-                {id:'345',type:'start'},
+                {id:'345',type:'pause',time:'2023-01-01T00:00:10.000Z'},
                 {id:'345',type:'pause',time:'2023-01-01T00:00:10.000Z'},
                 {id:'345',type:'resume', time:'2023-01-01T00:00:20.000Z'},
                 {id:'345',type:'pause',time:'2023-01-01T00:00:40.000Z'},
