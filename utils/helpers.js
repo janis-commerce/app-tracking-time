@@ -1,5 +1,12 @@
 import {isSameDay, differenceInMilliseconds} from 'date-fns';
 
+const DEFAULT_TIME_VALUES = {
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+}
+
  class Helpers {
     static isString(str) {
         return !!(typeof str === 'string') && !!str.length;
@@ -21,30 +28,41 @@ import {isSameDay, differenceInMilliseconds} from 'date-fns';
         return arr.slice().reverse()
     }
 
-    static getTimeDifference (start, end, formatted) {
+    static getTimeDifference (start, end, format) {
         const parsedStart = new Date(start);
         const parsedEnd = new Date(end);
         const sameDay = isSameDay(parsedStart, parsedEnd);
         const miliseconds = differenceInMilliseconds(parsedEnd, parsedStart);
+
+        if(!format) return miliseconds;
+
+        const {days, hours, minutes, seconds} = this.convertMillisecondsToTime(miliseconds)
+
+        return {
+            days: sameDay ? 0 : days,
+            hours,
+            minutes,
+            seconds
+        }
+    }
+
+    static convertMillisecondsToTime (miliseconds) {
+        if(!miliseconds) return DEFAULT_TIME_VALUES;
+
         const seconds = Math.floor(miliseconds / 1000);
         const hours = Math.floor(seconds / 3600);
-
-        if(!formatted) return miliseconds;
-        
-        const days = sameDay ? 0 : Math.floor(hours / 24);
+        const days = Math.floor(hours / 24);
         const minutes = Math.floor((seconds % 3600) / 60);
         const restSeconds = seconds % 60;
         const restHours = hours % 24;
 
 
-        const formatDifference = {
+        return {
             days,
             hours: restHours,
             minutes,
             seconds: restSeconds
-        }
-
-        return formatDifference;
+        } 
     }
 
     static _mappedFilters(filters) {

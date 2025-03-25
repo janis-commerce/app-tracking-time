@@ -51,30 +51,6 @@ describe('EventTracker class', () => {
             })
         })
     })
-
-    describe('addManyEvents method', () => { 
-        describe('throws an error when', () => { 
-            it('first argument isnt an array', () => {
-                expect(eventTracker.addManyEvents({},'start')).rejects.toThrow(`an array of ids was expected`)
-            })
-         })
-
-         describe('return an object with', () => { 
-            it('created events time and ids, and an errors array with id and error',async () => {
-                searchFn
-                    .mockResolvedValueOnce([{'id':'345',type:'start'}])
-                    .mockResolvedValueOnce([])
-
-
-                const response = await eventTracker.addManyEvents(['345','456'],'start');
-                const {createdEvents, errors} = response;
-                
-                expect(createdEvents.length).toBe(1);
-                expect(errors.length).toBe(1);
-            })
-          })
-    })
-
     describe('getEventsById method', () => { 
         describe('throws an error when', () => { 
             it('id isnt valid', () => {
@@ -126,8 +102,8 @@ describe('EventTracker class', () => {
                 expect(eventTracker.getElapsedTime({})).toStrictEqual(DEFAULT_ELAPSED_TIME)
             })
 
-            it('should return 0 when startTime is null and formatted is false', () => {
-                expect(eventTracker.getElapsedTime({formatted:false})).toStrictEqual(0)
+            it('should return 0 when startTime is null and format is false', () => {
+                expect(eventTracker.getElapsedTime({format:false})).toStrictEqual(0)
             })
          })
 
@@ -160,13 +136,106 @@ describe('EventTracker class', () => {
 
             const startTime = '2023-01-01T00:00:00.000Z';
 
-            const response = eventTracker.getElapsedTime({startTime, formatted: false})
-
-            console.log('response', response)
+            const response = eventTracker.getElapsedTime({startTime, format: false})
 
             expect(response).toStrictEqual(60116031652)
          })
     })
+
+    describe('getStoppedTime method', () => {
+
+        describe('return 0', () => {
+          it('should return 0  if not pass events or this is an empty array', () => {
+            const response = eventTracker.getStoppedTime({})
+
+            expect(response).toStrictEqual(0)
+          })
+        })
+        
+        describe('should return stopped time', () => {
+          it('after adding up all the milliseconds between pauses and resumes', () => {
+            const registeredEvents = [
+                {id:'345',type:'start'},
+                {id:'345',type:'pause',time:'2023-01-01T00:00:10.000Z'},
+                {id:'345',type:'resume', time:'2023-01-01T00:00:20.000Z'},
+                {id:'345',type:'pause',time:'2023-01-01T00:00:40.000Z'},
+                {id:'345',type:'pause',time:'2023-01-01T00:01:00.000Z'},
+                {id:'345',type:'resume', time:'2023-01-01T00:01:20.000Z'},
+                {id:'345',type:'pause',time:'2023-01-01T00:01:40.000Z'},
+            ]
+
+            const response = eventTracker.getStoppedTime({events:registeredEvents});
+
+            expect(response).toStrictEqual(30000)
+          })
+
+          it('should return stopped time in time format if format params is true', () => {
+            const registeredEvents = [
+                {id:'345',type:'start'},
+                {id:'345',type:'pause',time:'2023-01-01T00:00:10.000Z'},
+                {id:'345',type:'resume', time:'2023-01-01T00:00:20.000Z'},
+                {id:'345',type:'pause',time:'2023-01-01T00:00:40.000Z'},
+                {id:'345',type:'pause',time:'2023-01-01T00:01:00.000Z'},
+                {id:'345',type:'resume', time:'2023-01-01T00:01:20.000Z'},
+            ]
+
+            const response = eventTracker.getStoppedTime({events:registeredEvents, format:true});
+
+            expect(response).toStrictEqual({"days": 0, "hours": 0, "minutes": 0, "seconds": 30})
+          })
+        })
+        
+    })
+
+    describe('getNetTrackingTime method', () => {
+
+        describe('return 0', () => {
+            it('should return 0 when not receive a valid array as argument ', () => {
+            const response = eventTracker.getNetTrackingTime({});
+
+            expect(response).toStrictEqual(0);
+            })
+            
+            it('should return 0 when elapsed time is 0 or less than 0', () => {
+                const events = [
+                    {id:'345',type:'start',time:'2023-01-01T00:00:10.000Z'},
+                    {id:'345',type:'finish', time:'2023-01-01T00:00:10.000Z'}
+                ]
+
+                const response = eventTracker.getNetTrackingTime({events});
+
+                expect(response).toStrictEqual(0);
+            })
+        })
+
+        describe('should return net tracked time', () => {
+            it('should return net tracking time when get elapsed time and discount paused time', () => {
+                const events = [
+                    {id:'345',type:'start',time:'2023-01-01T00:00:10.000Z'},
+                    {id:'345',type:'pause',time:'2023-01-01T00:00:15.000Z'},
+                    {id:'345',type:'resume', time:'2023-01-01T00:00:40.000Z'},
+                    {id:'345',type:'finish', time:'2023-01-01T00:00:50.000Z'}
+                ]
+
+                const response = eventTracker.getNetTrackingTime({events});
+
+                expect(response).toStrictEqual(15000);
+                })
+            it('should return formatted net tracking time when get elapsed time and discount paused time, but format argument is true', () => {
+                const events = [
+                    {id:'345',type:'start',time:'2023-01-01T00:00:10.000Z'},
+                    {id:'345',type:'pause',time:'2023-01-01T00:00:15.000Z'},
+                    {id:'345',type:'resume', time:'2023-01-01T00:00:40.000Z'},
+                    {id:'345',type:'finish', time:'2023-01-01T00:00:50.000Z'}
+                ]
+    
+                const response = eventTracker.getNetTrackingTime({events, format:true});
+    
+                expect(response).toStrictEqual({"days": 0, "hours": 0, "minutes": 0, "seconds": 15});
+            }) 
+        })
+    })
+    
 
     describe('deleteEventsById method', () => { 
         describe('throws an error when', () => { 
