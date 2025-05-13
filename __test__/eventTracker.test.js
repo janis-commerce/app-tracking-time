@@ -290,90 +290,6 @@ describe('EventTracker class', () => {
         })
     })
 
-    describe('stopEventsInBackground method', () => { 
-        describe('throws an error when', () => { 
-            it('database search fails', async () => {
-                searchFn.mockRejectedValueOnce('error');
-
-                const [, error] = await Helpers.promiseWrapper(
-                    eventTracker._stopEventsInBackground()
-                )
-
-                expect(error.message).toStrictEqual('error')
-            })
-         })
-
-         describe('return empty array when', () => { 
-            it('database ids were not obtained', async () => {
-                searchFn.mockResolvedValueOnce([]);
-
-                const response = await eventTracker._stopEventsInBackground();
-
-                expect(response).toStrictEqual([])
-            })
-        })
-
-        describe('return an array with paused times when', () => { 
-            it('ids are valid and this is not paused', async () => {
-                saveFn
-                    .mockResolvedValueOnce({})
-
-                searchFn
-                    .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
-                    .mockResolvedValueOnce([{id:'12345',type:'start'}])
-                    .mockResolvedValueOnce([{id:'12345',type:'start'}])
-                    .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
-                
-                
-
-                const response = await eventTracker._stopEventsInBackground();
-
-                expect(response.length).toBe(1);
-            })
-
-            it('ignore elements that throws errors when try to obtain last event',  async () => {
-
-                searchFn
-                    .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
-                    .mockRejectedValueOnce(new Error('database error'))
-                    .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
-                
-
-                const response = await eventTracker._stopEventsInBackground();
-
-                expect(response).toStrictEqual([])
-            })
-
-            it('ignore elements that throws errors when try to obtain last event',  async () => {
-                searchFn
-                    .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
-                    .mockResolvedValueOnce([{id:'12345',type:'start'}])
-                    .mockRejectedValueOnce(new Error('database error'))
-                    .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
-                
-
-                const response = await eventTracker._stopEventsInBackground();
-
-                expect(response).toStrictEqual([])
-            })
-
-            it('ignore elements that throws errors when try to obtain last event',  async () => {
-                saveFn
-                    .mockRejectedValueOnce(new Error('invalid id'))
-                searchFn
-                    .mockResolvedValueOnce([{id:'12345',type:'start'},{id:'234',type:'start'},{id:'234',type:'pause'}])
-                    .mockResolvedValueOnce([{id:'12345',type:'start'}])
-                    .mockRejectedValueOnce(new Error('database error'))
-                    .mockResolvedValueOnce([{id:'234',type:'start'},{id:'234',type:'pause'}])
-                
-
-                const response = await eventTracker._stopEventsInBackground();
-
-                expect(response).toStrictEqual([])
-            })
-        })
-    })
-
     describe('removeFinishById method', () => { 
         it('remove finish event when delete database method resolved correctly', async () => {
             deleteFn.mockResolvedValueOnce();
@@ -439,28 +355,4 @@ describe('EventTracker class', () => {
             })
          })
     })
-
-    describe('isFocused getter and setFocused setter', () => { 
-        it('should return _appFocused property value', () => {
-            const state = eventTracker.isFocused;
-
-            expect(typeof state).toStrictEqual('boolean')
-
-
-        })
-
-        it('should set new _appFocused state', () => {
-            eventTracker.setFocus = true;
-            const state = eventTracker.isFocused;
-
-            expect(state).toBeTruthy();
-        }) 
-
-        it('shouldn t set new appFocused state if value isnt a boolean', () => {
-            eventTracker.setFocus = 3;
-            const state = eventTracker.isFocused;
-
-            expect(state).toBeTruthy();
-        })
-     })
  })

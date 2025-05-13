@@ -95,24 +95,6 @@ const deleteEvents = async (id) => {
 <Button title='remove events' onPress={() => deleteEvents('66e99577e128deb19d57cd74')}/>
 ```
 
-### Pause all tracked ids when the app goes into the background.
-
-To save a pause event for all followed ids, you can use startListening and stopListening methods.
-
-These methods are listeners that are responsible for detecting the change of state of the application. When the app enters the background, they execute a massive action that is responsible for stopping the tracking of all the IDs that are registered up to that moment in the database.
-
-The best way to use it would be to call a useEffect hook on some component that, if possible, is not unmounted until the application goes into the background or is closed.
-
-```js
-useEffect(() => {
-    EventTracker.startListening();
-
-    return () => {
-        EventTracker.stopListening();
-    }
-},[])
-```
-
 The cleanup method will be called once the component is unmounted and will unlisten for state changes from the app.
 If any of the events you want to pause is already paused, what will happen is that the console will throw a warning with the error reported by the package.
 
@@ -122,32 +104,3 @@ The package has internal validations that prevent events from being saved consec
 For example, you will not be able to store 2 pause type events consecutively. Additionally, saving any event related to an ID that has already been finished is also not allowed.
 
 If you want to know what was the last event that was stored for a particular id, you can call the getLastEventById method, which will return an object with the information of the last stored event, including the type.
-
-### My recording stops when I open the camera or request permissions
-
-The package is programmed to take care of stopping all possible tracking when the application goes into the background. However, this on android has some problems:
-
-Because of the way react-native's AppState API works, the package interprets the app as being in the background whenever the camera is used or the user is asked for permission.
-This happens because, in Android, it is interpreted that the intervention of another application (camera, permissions manager) is considered a process that runs in front of our application, so it would be in the background
-To solve this problem (partially) you can indicate, using the setFocus method of eventTracker, that the application is in the foreground, even when these processes are running, which will prevent erroneous pause events from being logged
-
-```js
-
-const handleCameraOpen = () => {
-    eventTracker.setFocus = true;
-    setCameraVisible(true):
-}
-
-```
-
-However, you will need to remember to set the focus to false when closing the activity so that the app can continue recording pauses when the user leaves the app in the background
-
-
-```js
-
-const handleCameraClose = () => {
-    setCameraVisible(false):
-    eventTracker.setFocus = false;
-}
-
-```
