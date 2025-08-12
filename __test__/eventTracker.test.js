@@ -363,7 +363,12 @@ describe('EventTracker class', () => {
 		describe('return all events when', () => {
 			it('no query is provided', async () => {
 				const mockEvents = [
-					{id: '123', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+					{
+						id: '123',
+						type: 'start',
+						time: '2023-01-01T00:00:00.000Z',
+						payload: '{"userId":"123","warehouseId":"123-wh"}',
+					},
 					{id: '456', type: 'pause', time: '2023-01-01T00:00:10.000Z', payload: '{}'},
 				];
 				searchFn.mockResolvedValueOnce(mockEvents);
@@ -371,7 +376,15 @@ describe('EventTracker class', () => {
 				const response = await eventTracker.searchEventByQuery();
 
 				expect(searchFn).toHaveBeenCalledWith('', ...[]);
-				expect(response).toStrictEqual(mockEvents);
+				expect(response).toStrictEqual([
+					{
+						id: '123',
+						type: 'start',
+						time: '2023-01-01T00:00:00.000Z',
+						payload: {userId: '123', warehouseId: '123-wh'},
+					},
+					{id: '456', type: 'pause', time: '2023-01-01T00:00:10.000Z', payload: {}},
+				]);
 			});
 		});
 
@@ -386,7 +399,10 @@ describe('EventTracker class', () => {
 				const response = await eventTracker.searchEventByQuery('id == $0', '123');
 
 				expect(searchFn).toHaveBeenCalledWith('id == $0', '123');
-				expect(response).toStrictEqual(mockEvents);
+				expect(response).toStrictEqual([
+					{id: '123', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: {}},
+					{id: '123', type: 'pause', time: '2023-01-01T00:00:10.000Z', payload: {}},
+				]);
 			});
 
 			it('searching by type', async () => {
@@ -399,7 +415,10 @@ describe('EventTracker class', () => {
 				const response = await eventTracker.searchEventByQuery('type == $0', 'start');
 
 				expect(searchFn).toHaveBeenCalledWith('type == $0', 'start');
-				expect(response).toStrictEqual(mockEvents);
+				expect(response).toStrictEqual([
+					{id: '123', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: {}},
+					{id: '456', type: 'start', time: '2023-01-01T00:00:05.000Z', payload: {}},
+				]);
 			});
 
 			it('searching with complex query', async () => {
@@ -421,7 +440,33 @@ describe('EventTracker class', () => {
 					'start',
 					new Date('2023-01-01'),
 				);
-				expect(response).toStrictEqual(mockEvents);
+				expect(response).toStrictEqual([
+					{id: '123', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: {}},
+				]);
+			});
+
+			it('searching with payload containing data', async () => {
+				const mockEvents = [
+					{
+						id: '123',
+						type: 'resume',
+						time: '2023-01-01T00:00:00.000Z',
+						payload: '{"userId":"123","warehouseId":"123-wh"}',
+					},
+				];
+				searchFn.mockResolvedValueOnce(mockEvents);
+
+				const response = await eventTracker.searchEventByQuery('id == $0', '123');
+
+				expect(searchFn).toHaveBeenCalledWith('id == $0', '123');
+				expect(response).toStrictEqual([
+					{
+						id: '123',
+						type: 'resume',
+						time: '2023-01-01T00:00:00.000Z',
+						payload: {userId: '123', warehouseId: '123-wh'},
+					},
+				]);
 			});
 		});
 

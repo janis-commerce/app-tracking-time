@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2025-08-13
+
+### Fixed
+
+- An error in which data from db was not being parsed
+
 ## [2.2.0] - 2025-08-06
 
 ### Added
