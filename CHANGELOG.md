@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- vulnerabilities in tar-fs package
+
 ## [2.2.1] - 2025-08-13
 
 ### Fixed
@@ -22,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.1.0] - 2025-07-23
 
 ### Added
+
 - Close db in Database methods
 
 ## [2.0.0] - 2025-05-19
@@ -68,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Event validation update: Now only allows adding finish events after tracking is completed.
-- _stopEventsInBackground improvement: Added validation to pause only active events
+- \_stopEventsInBackground improvement: Added validation to pause only active events
 - getElapsedTime adjustment: Time calculations now use the last finish event when multiple are present.
 
 ### Added
