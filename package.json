@@ -28,8 +28,7 @@
   "author": "Janis commerce",
   "license": "ISC",
   "dependencies": {
-    "date-fns": ">=2.0.0 <3.0.0",
-    "realm": "^11.0.0"
+    "date-fns": ">=2.0.0 <5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.7",
@@ -51,10 +50,10 @@
     "react-native-fs": "^2.20.0"
   },
   "peerDependencies": {
-    "date-fns": ">=2.0.0 <3.0.0",
-    "react": ">=18.2.0 <19.0.0",
-    "react-native": ">=0.71.5 <0.75.0",
-    "realm": "^11.0.0"
+    "date-fns": ">=2.0.0 <5.0.0",
+    "react": ">=18.2.0 <20.0.0",
+    "react-native": ">=0.73.0 <0.82.0",
+    "realm": ">=11.0.0 || ^20.0.0"
   },
   "bugs": {
     "url": "https://github.com/janis-commerce/app-tracking-time/issues"
