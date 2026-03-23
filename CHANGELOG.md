@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Moved realm from dependencies to peerDependencies
+- Widened realm peer dependency range to ^11.0.0 || ^20.0.0
+- Widened date-fns range from <3.0.0 to <5.0.0
+- Widened react-native peer dependency range to >=0.71.5 <0.82.0
+- Widened react peer dependency range to >=18.2.0 <20.0.0
+- Standardized Node.js to v22 in .nvmrc and all CI workflows
+- Upgraded GitHub Actions to v4 (checkout, setup-node)
+
+### Added
+- Beta publish workflow for pre-release branches
+
 ## [2.3.0] - 2025-11-06
 
 ### Added
