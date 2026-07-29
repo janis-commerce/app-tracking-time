@@ -148,6 +148,17 @@ describe('EventTracker class', () => {
 					{id: '345', type: 'pause', time: '2023-01-01T00:00:00.000Z', payload: {}},
 				]);
 			});
+
+			it('returns events in chronological order even when storage order is shuffled', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:10:00.000Z', payload: '{}'},
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.getEventsById('345');
+
+				expect(response.map((event) => event.type)).toStrictEqual(['start', 'finish']);
+			});
 		});
 	});
 
