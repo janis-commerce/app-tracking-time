@@ -539,6 +539,18 @@ describe('EventTracker class', () => {
 
 				expect(time).toStrictEqual('2023-01-02T00:00:00.000Z');
 			});
+
+			it('should return the chronologically last time when storage order is not chronological', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '123', type: 'start', payload: {}, time: '2023-01-03T00:00:00.000Z'},
+					{id: '123', type: 'start', payload: {}, time: '2023-01-01T00:00:00.000Z'},
+					{id: '123', type: 'start', payload: {}, time: '2023-01-02T00:00:00.000Z'},
+				]);
+
+				const time = await eventTracker.getIdTimeByType('123', 'start');
+
+				expect(time).toStrictEqual('2023-01-03T00:00:00.000Z');
+			});
 		});
 	});
 
