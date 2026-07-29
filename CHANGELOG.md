@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `getNetTrackingTime` now sums every active span (`start|resume → pause|finish`) across all cycles, instead of using only the first `start` and first `finish`
+- `getNetTrackingTime` sorts events by time internally (storage order is not guaranteed) — this also neutralizes clock-regression spans
+- **BREAKING**: `getNetTrackingTime` no longer counts a trailing open span against `now`: a record in progress contributes 0 for its open span (compute live time on the caller side). Release as a major version
 - `finish` over an already finished record is now rejected (previously allowed, which could stack duplicate finish events)
 - Moved realm from dependencies to peerDependencies
 - Widened realm peer dependency range to ^11.0.0 || ^20.0.0

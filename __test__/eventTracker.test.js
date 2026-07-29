@@ -329,6 +329,58 @@ describe('EventTracker class', () => {
 				expect(response).toStrictEqual(10000);
 			});
 		});
+
+		describe('should tolerate dirty histories', () => {
+			it('should ignore stacked finish events from legacy data', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:30:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+
+			it('should close the span on a finish emitted directly after a pause', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'pause', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+
+			it('should sort events by time when storage order is not chronological', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:10:05.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(15000);
+			});
+
+			it('should neutralize a device clock regression via sorting', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:09:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+		});
 	});
 
 	describe('deleteEventsById method', () => {
