@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `getEventsById` now returns events in chronological order (storage order is not guaranteed) — consumers no longer need to re-sort
 - `getLastEventById` now sorts events by time before picking the last one — storage order is not guaranteed, and a stale read there mis-validated cycle transitions (it could block reopening a finished record)
 - `getIdTimeByType` now sorts events by time before picking the last one — with multi-cycle records (N events of the same type per id) the unsorted read could return a stale event's time
+- `getIdTimeByType` now resolves `null` when there are no events for the id and type, as documented (it used to reject with a TypeError)
 - `getNetTrackingTime` ignores events with an invalid `time` instead of collapsing the whole record to 0
 - `getNetTrackingTime` with `format: true` now always returns the `{days, hours, minutes, seconds}` object, including for in-progress records whose net time is 0 (it used to leak the raw number `0`)
 

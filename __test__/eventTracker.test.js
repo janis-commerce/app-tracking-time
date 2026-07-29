@@ -520,6 +520,14 @@ describe('EventTracker class', () => {
 		});
 
 		describe('return null', () => {
+			it('should return null when there are no events for the id and type', async () => {
+				searchFn.mockResolvedValueOnce([]);
+
+				const time = await eventTracker.getIdTimeByType('123', 'finish');
+
+				expect(time).toBeNull();
+			});
+
 			it('should return null when finded event not contains time key', async () => {
 				searchFn.mockResolvedValueOnce([{id: '123', type: 'start', payload: {}}]);
 
