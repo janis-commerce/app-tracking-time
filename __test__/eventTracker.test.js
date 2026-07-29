@@ -49,6 +49,84 @@ describe('EventTracker class', () => {
 			});
 		});
 	});
+
+	describe('multi-cycle events sequence', () => {
+		describe('allows', () => {
+			it('a new start after a finish (reopens the record with a new cycle)', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.addEvent({id: '345', type: 'start'});
+
+				expect(response).toBeTruthy();
+			});
+
+			it('a pause within a reopened cycle', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.addEvent({id: '345', type: 'pause'});
+
+				expect(response).toBeTruthy();
+			});
+		});
+
+		describe('rejects', () => {
+			it('a second start while a cycle is open', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'start'})).rejects.toThrow(
+					'only one start record is allowed per cycle',
+				);
+			});
+
+			it('a start while the cycle is paused', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'pause', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'start'})).rejects.toThrow(
+					'there is a cycle in progress',
+				);
+			});
+
+			it('a finish over an already finished record', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'finish'})).rejects.toThrow(
+					'record is already finished',
+				);
+			});
+
+			it('a resume after a finish', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'resume'})).rejects.toThrow(
+					"record wasn't paused",
+				);
+			});
+
+			it('a pause after a finish', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'pause'})).rejects.toThrow(
+					"record can't be paused",
+				);
+			});
+		});
+	});
 	describe('getEventsById method', () => {
 		describe('throws an error when', () => {
 			it('id isnt valid', () => {
@@ -220,6 +298,35 @@ describe('EventTracker class', () => {
 				const response = eventTracker.getNetTrackingTime({events, format: true});
 
 				expect(response).toStrictEqual({days: 0, hours: 0, minutes: 0, seconds: 15});
+			});
+		});
+
+		describe('should support multiple cycles', () => {
+			it('should sum the active spans of every start-finish cycle', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+					{id: '345', type: 'pause', time: '2023-01-01T00:10:05.000Z'},
+					{id: '345', type: 'resume', time: '2023-01-01T00:20:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:20:15.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(30000);
+			});
+
+			it('should not count a trailing open span when the record is in progress', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
 			});
 		});
 	});

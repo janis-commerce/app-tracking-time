@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Multi-cycle support: a record now accepts N `start → finish` cycles (a `start` right after a `finish` opens a new cycle)
+- Beta publish workflow for pre-release branches
+
 ### Changed
+
+- `getNetTrackingTime` now sums every active span (`start|resume → pause|finish`) across all cycles, instead of using only the first `start` and first `finish`
+- `finish` over an already finished record is now rejected (previously allowed, which could stack duplicate finish events)
 - Moved realm from dependencies to peerDependencies
 - Widened realm peer dependency range to ^11.0.0 || ^20.0.0
 - Widened date-fns range from <3.0.0 to <5.0.0
@@ -16,8 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standardized Node.js to v22 in .nvmrc and all CI workflows
 - Upgraded GitHub Actions to v4 (checkout, setup-node)
 
-### Added
-- Beta publish workflow for pre-release branches
+### Deprecated
+
+- `removeFinishById`: deleting finish events corrupts multi-cycle histories; open a new cycle with a `start` event instead
 
 ## [2.3.0] - 2025-11-06
 

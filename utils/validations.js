@@ -33,32 +33,38 @@ class Validations {
         return parsedDate.toISOString() === date;
     }
 
+    /**
+     * Multi-cycle sequence: a record can hold N `start → finish` cycles.
+     * `start` opens a new cycle (first event or right after a `finish`);
+     * `pause`/`resume` only apply within an open cycle; `finish` closes it.
+     */
     static validateEventsSequence (type,previousType = '') {
 
-        if(previousType === 'finish' && type !== 'finish') throw new EventTrackerError(`Forbidden event: record is already finished`)
         switch(type) {
-            case 'start': 
-                if(previousType === 'start') throw new EventTrackerError(`Forbidden event: only one start record is allowed`);
+            case 'start':
+                if(previousType === 'start') throw new EventTrackerError(`Forbidden event: only one start record is allowed per cycle`);
 
-                if(previousType !== '') throw new EventTrackerError(`Forbidden event: there are already records stored`);
+                if(previousType === 'pause' || previousType === 'resume') throw new EventTrackerError(`Forbidden event: there is a cycle in progress`);
                 break;
-                
-            case 'pause': 
+
+            case 'pause':
                 let validPreviousTypes = ['start','resume'];
 
                 if(previousType === 'pause') throw new EventTrackerError(`Forbidden event: record is already paused`);
 
                 if(!previousType || !validPreviousTypes.includes(previousType)) throw new EventTrackerError("Forbidden event: record can't be paused")
                 break;
-                
-            case 'resume': 
+
+            case 'resume':
                 if(previousType === 'resume') throw new EventTrackerError(`Forbidden event: the record is already being continued`);
 
                 if(previousType !== 'pause') throw new EventTrackerError("Forbidden event: record wasn't paused");
                 break;
-            
-            case 'finish': 
+
+            case 'finish':
                 if(previousType === '') throw new EventTrackerError(`Forbidden event: record wasn't started`);
+
+                if(previousType === 'finish') throw new EventTrackerError(`Forbidden event: record is already finished`);
                 break;
         }
 
