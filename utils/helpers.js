@@ -20,14 +20,6 @@ const DEFAULT_TIME_VALUES = {
         return !!(arr instanceof Array);
     }
 
-    static findEventByStatus(arr, status) {
-        return arr.find((value) => value?.type === status)
-    }
-
-    static reverseArray (arr) {
-        return arr.slice().reverse()
-    }
-
     static getTimeDifference (start, end, format) {
         const parsedStart = new Date(start);
         const parsedEnd = new Date(end);

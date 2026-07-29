@@ -179,6 +179,17 @@ describe('EventTracker class', () => {
 				payload: {userId: '123', warehouseId: '123-wh'},
 			});
 		});
+
+		it('returns the chronologically last event even when storage order is shuffled', async () => {
+			searchFn.mockResolvedValueOnce([
+				{id: '345', type: 'finish', time: '2023-01-01T00:10:00.000Z'},
+				{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z'},
+			]);
+
+			const typeResponse = await eventTracker.getLastEventById('345');
+
+			expect(typeResponse.type).toStrictEqual('finish');
+		});
 	});
 
 	describe('getElapsedTime method', () => {
@@ -366,6 +377,26 @@ describe('EventTracker class', () => {
 				const response = eventTracker.getNetTrackingTime({events});
 
 				expect(response).toStrictEqual(15000);
+			});
+
+			it('should ignore events with an invalid time without wiping valid cycles', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'finish', time: undefined},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+
+			it('should return the formatted zero object for an in-progress record with format true', () => {
+				const events = [{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'}];
+
+				const response = eventTracker.getNetTrackingTime({events, format: true});
+
+				expect(response).toStrictEqual({days: 0, hours: 0, minutes: 0, seconds: 0});
 			});
 
 			it('should neutralize a device clock regression via sorting', () => {

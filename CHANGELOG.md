@@ -26,9 +26,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standardized Node.js to v22 in .nvmrc and all CI workflows
 - Upgraded GitHub Actions to v4 (checkout, setup-node)
 
+### Fixed
+
+- `getLastEventById` now sorts events by time before picking the last one — storage order is not guaranteed, and a stale read there mis-validated cycle transitions (it could block reopening a finished record)
+- `getNetTrackingTime` ignores events with an invalid `time` instead of collapsing the whole record to 0
+- `getNetTrackingTime` with `format: true` now always returns the `{days, hours, minutes, seconds}` object, including for in-progress records whose net time is 0 (it used to leak the raw number `0`)
+
 ### Deprecated
 
 - `removeFinishById`: deleting finish events corrupts multi-cycle histories; open a new cycle with a `start` event instead
+
+### Removed
+
+- Internal helpers `findEventByStatus` and `reverseArray` (orphaned by the `getNetTrackingTime` rewrite and the `getLastEventById` fix)
 
 ## [2.3.0] - 2025-11-06
 
