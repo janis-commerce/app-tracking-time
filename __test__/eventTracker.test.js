@@ -284,6 +284,12 @@ describe('EventTracker class', () => {
 				expect(response).toStrictEqual(0);
 			});
 
+			it('should return the formatted zero object when not receive a valid array and format is true', () => {
+				const response = eventTracker.getNetTrackingTime({format: true});
+
+				expect(response).toStrictEqual(DEFAULT_ELAPSED_TIME);
+			});
+
 			it('should return 0 when elapsed time is 0 or less than 0', () => {
 				const events = [
 					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
