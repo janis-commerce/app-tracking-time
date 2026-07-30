@@ -9,10 +9,10 @@ To ensure the proper functioning of this library, make sure that the following d
 
 ### Required Peer Dependencies
 
-- **`date-fns`**: `>=2.0.0 <3.0.0`
-- **`react`**: `>=18.2.0`
-- **`react-native`**: `>=0.71.5`
-- **`realm`**: `^11.0.0`
+- **`date-fns`**: `>=2.0.0 <5.0.0`
+- **`react`**: `>=18.2.0 <20.0.0`
+- **`react-native`**: `>=0.71.5 <0.82.0`
+- **`realm`**: `^11.0.0 || ^20.0.0`
 
 These dependencies are required for the library to work correctly. Ensure that your project has these versions installed to avoid compatibility issues.
 
@@ -101,6 +101,8 @@ If any of the events you want to pause is already paused, what will happen is th
 ### Sequence of recorded events
 
 The package has internal validations that prevent events from being saved consecutively or that do not have coherence depending on the event that has been saved prior to this one.
-For example, you will not be able to store 2 pause type events consecutively. Additionally, saving any event related to an ID that has already been finished is also not allowed.
+For example, you will not be able to store 2 pause type events consecutively.
+
+A record supports **multiple `start → finish` cycles**: a `finish` event closes the current cycle, and a new `start` right after it opens a new cycle without deleting the previous ones. A `finish` over an already finished record, or a `start` while a cycle is still in progress (`start`, `pause` or `resume` as the last event), is rejected. `getNetTrackingTime` returns the sum of every active span (`start|resume → pause|finish`) across all cycles; a trailing open span (record in progress) is not counted — compute live time on the caller side.
 
 If you want to know what was the last event that was stored for a particular id, you can call the getLastEventById method, which will return an object with the information of the last stored event, including the type.
