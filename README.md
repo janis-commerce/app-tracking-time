@@ -41,10 +41,11 @@ export default EventTracker;
 To save an event you must call the addEvent method of the EventTracker class and pass it an object with the following parameters:
 
 ```js
+import {EVENT_TYPES} from '@janiscommerce/app-tracking-time';
 
 const saveInitEvent = async (id) => {
     try {
-        await EventTracker.addEvent({id,type:'start'})
+        await EventTracker.addEvent({id,type:EVENT_TYPES.START})
     } catch(error) {
         console.warn(error);
     }
@@ -55,6 +56,8 @@ const saveInitEvent = async (id) => {
 ```
 
 This action will save a start type event associated with the id 66e99577e128deb19d57cd74
+
+`EVENT_TYPES` is the exported vocabulary of the package (`START`, `PAUSE`, `RESUME`, `FINISH`); use it instead of writing the literals on your side. The type is normalized before being validated and stored, so `'START'` and `'start'` end up as the same record.
 
 
 ### Search all events associated with your id:
@@ -106,3 +109,5 @@ For example, you will not be able to store 2 pause type events consecutively.
 A record supports **multiple `start → finish` cycles**: a `finish` event closes the current cycle, and a new `start` right after it opens a new cycle without deleting the previous ones. A `finish` over an already finished record, or a `start` while a cycle is still in progress (`start`, `pause` or `resume` as the last event), is rejected. `getNetTrackingTime` returns the sum of every active span (`start|resume → pause|finish`) across all cycles; a trailing open span (record in progress) is not counted — compute live time on the caller side.
 
 If you want to know what was the last event that was stored for a particular id, you can call the getLastEventById method, which will return an object with the information of the last stored event, including the type.
+
+Every method that reads events returns them in chronological order and discards records with an invalid `time`: storage order is not guaranteed, and a single corrupted date would otherwise leave the whole read unsorted.
