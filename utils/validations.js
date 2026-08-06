@@ -4,6 +4,19 @@ import {EVENT_TYPES, VALID_EVENT_TYPES} from "./eventTypes";
 
 class Validations {
     /**
+     * @name normalizeEventType
+     * @description lowercases the type so validation, storage and time calculation
+     * all work on the same value. Anything that is not a string normalizes to ''.
+     * @param {string} type
+     * @returns {string}
+     */
+    static normalizeEventType (type) {
+        if(!Helpers.isString(type)) return '';
+
+        return type.toLowerCase();
+    }
+
+    /**
      * @name isValidEventType
      * @description returns a boolean indicating whether the type is valid or not
      * @param {string} type
@@ -15,7 +28,7 @@ class Validations {
      *  Event.isValidEventType('started') => false;
      */
     static isValidEventType (type) {
-        return VALID_EVENT_TYPES.includes(type.toLowerCase());
+        return VALID_EVENT_TYPES.includes(this.normalizeEventType(type));
     }
 
     static idValidation (id) {
@@ -36,8 +49,12 @@ class Validations {
      * Multi-cycle sequence: a record can hold N `start → finish` cycles.
      * `start` opens a new cycle (first event or right after a `finish`);
      * `pause`/`resume` only apply within an open cycle; `finish` closes it.
+     * Both types are normalized: an unnormalized value used to match no `case`,
+     * which let any event through without validating the sequence at all.
      */
-    static validateEventsSequence (type,previousType = '') {
+    static validateEventsSequence (currentType,lastType = '') {
+        const type = this.normalizeEventType(currentType);
+        const previousType = this.normalizeEventType(lastType);
 
         switch(type) {
             case EVENT_TYPES.START:
@@ -65,6 +82,9 @@ class Validations {
 
                 if(previousType === EVENT_TYPES.FINISH) throw new EventTrackerError(`Forbidden event: record is already finished`);
                 break;
+
+            default:
+                throw new EventTrackerError('Event type is invalid');
         }
 
     }

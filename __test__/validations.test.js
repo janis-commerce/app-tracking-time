@@ -21,6 +21,16 @@ describe('Validations', () => {
 		});
 	});
 
+	describe('normalizeEventType', () => {
+		it.each(['START', 'Start', 'sTaRt'])('lowercases %s', (type) => {
+			expect(Validations.normalizeEventType(type)).toBe('start');
+		});
+
+		it.each([undefined, null, '', 123, {}])('returns an empty string for %p', (type) => {
+			expect(Validations.normalizeEventType(type)).toBe('');
+		});
+	});
+
 	describe('isValidEventType', () => {
 		it.each(['start', 'pause', 'resume', 'finish', 'START'])('accepts %s', (type) => {
 			expect(Validations.isValidEventType(type)).toBe(true);
@@ -28,6 +38,10 @@ describe('Validations', () => {
 
 		it('rejects an unknown type', () => {
 			expect(Validations.isValidEventType('started')).toBe(false);
+		});
+
+		it.each([undefined, null, 123])('returns false for the non-string type %p', (type) => {
+			expect(Validations.isValidEventType(type)).toBe(false);
 		});
 	});
 
@@ -127,6 +141,24 @@ describe('Validations', () => {
 			it('rejects finish over an already finished record', () => {
 				expect(() => Validations.validateEventsSequence('finish', 'finish')).toThrow(
 					'record is already finished'
+				);
+			});
+		});
+
+		describe('normalization', () => {
+			it('validates an uppercase type instead of letting it through unchecked', () => {
+				expect(() => Validations.validateEventsSequence('START', 'start')).toThrow(
+					'only one start record is allowed per cycle'
+				);
+			});
+
+			it('normalizes the previous type read from storage', () => {
+				expect(() => Validations.validateEventsSequence('resume', 'PAUSE')).not.toThrow();
+			});
+
+			it.each(['started', undefined, 123])('rejects the unknown type %p', (type) => {
+				expect(() => Validations.validateEventsSequence(type, 'start')).toThrow(
+					'Event type is invalid'
 				);
 			});
 		});

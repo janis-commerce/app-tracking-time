@@ -48,6 +48,37 @@ describe('EventTracker class', () => {
 				expect(response).toBeTruthy();
 			});
 		});
+
+		describe('normalizes the received type so that', () => {
+			it('the persisted event keeps the canonical lowercase type', async () => {
+				searchFn.mockResolvedValueOnce([]);
+				saveFn.mockResolvedValueOnce();
+
+				await eventTracker.addEvent({id: '345', type: 'START', time: '2023-01-01T00:00:00.000Z'});
+
+				expect(saveFn).toHaveBeenCalledWith(
+					expect.objectContaining({id: '345', type: 'start'}),
+				);
+			});
+
+			it('an uppercase type does not bypass the sequence validation', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'START'})).rejects.toThrow(
+					'only one start record is allowed per cycle',
+				);
+			});
+
+			it('a missing type rejects with an EventTrackerError instead of a TypeError', async () => {
+				await expect(eventTracker.addEvent({id: '345'})).rejects.toThrow('Event type is invalid');
+			});
+
+			it('a call without params rejects with the id error', async () => {
+				await expect(eventTracker.addEvent()).rejects.toThrow('ID is invalid or null');
+			});
+		});
 	});
 
 	describe('multi-cycle events sequence', () => {
@@ -551,6 +582,17 @@ describe('EventTracker class', () => {
 
 				const time = await eventTracker.getIdTimeByType('123', 'start');
 
+				expect(time).toStrictEqual('2023-01-02T00:00:00.000Z');
+			});
+
+			it('should query storage with the normalized type when it arrives uppercased', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '123', type: 'start', payload: {}, time: '2023-01-02T00:00:00.000Z'},
+				]);
+
+				const time = await eventTracker.getIdTimeByType('123', 'START');
+
+				expect(searchFn).toHaveBeenCalledWith('id LIKE[c] $0 && type = $1', '123', 'start');
 				expect(time).toStrictEqual('2023-01-02T00:00:00.000Z');
 			});
 
