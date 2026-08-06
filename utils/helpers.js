@@ -20,6 +20,23 @@ const DEFAULT_TIME_VALUES = {
         return !!(arr instanceof Array);
     }
 
+    /**
+     * @name sortValidEventsByTime
+     * @description discards events with an invalid `time` and returns the rest in
+     * chronological order. Storage order is not guaranteed, and the filter is not
+     * cosmetic: an invalid date makes the comparator return NaN, which leaves the
+     * whole array unsorted, so filtering and sorting have to travel together.
+     * @param {Array<{time: string}>} events
+     * @returns {Array<{time: string}>}
+     */
+    static sortValidEventsByTime (events) {
+        if(!this.isArray(events)) return [];
+
+        return events
+            .filter((event) => !Number.isNaN(new Date(event?.time).getTime()))
+            .sort((eventA, eventB) => new Date(eventA.time) - new Date(eventB.time));
+    }
+
     static getTimeDifference (start, end, format) {
         const parsedStart = new Date(start);
         const parsedEnd = new Date(end);

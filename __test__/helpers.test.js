@@ -12,6 +12,51 @@ describe('Helpers', () => {
 		});
 	});
 
+	describe('sortValidEventsByTime', () => {
+		const start = {type: 'start', time: '2026-07-30T10:00:00.000Z'};
+		const finish = {type: 'finish', time: '2026-07-30T10:05:00.000Z'};
+		const corrupted = {type: 'pause', time: 'garbage'};
+
+		it.each([undefined, null, 'events', {}])('returns an empty array for %p', (events) => {
+			expect(Helpers.sortValidEventsByTime(events)).toStrictEqual([]);
+		});
+
+		it('orders the events chronologically', () => {
+			expect(Helpers.sortValidEventsByTime([finish, start])).toStrictEqual([start, finish]);
+		});
+
+		it('discards the events with an invalid time', () => {
+			expect(Helpers.sortValidEventsByTime([start, corrupted, finish])).toStrictEqual([
+				start,
+				finish,
+			]);
+		});
+
+		it('keeps the same result whatever the storage order of a corrupted event is', () => {
+			const storageOrders = [
+				[start, finish, corrupted],
+				[corrupted, start, finish],
+				[finish, corrupted, start],
+			];
+
+			const lastTypes = storageOrders.map((events) => {
+				const sorted = Helpers.sortValidEventsByTime(events);
+
+				return sorted[sorted.length - 1].type;
+			});
+
+			expect(lastTypes).toStrictEqual(['finish', 'finish', 'finish']);
+		});
+
+		it('does not mutate the received array', () => {
+			const events = [finish, start];
+
+			Helpers.sortValidEventsByTime(events);
+
+			expect(events).toStrictEqual([finish, start]);
+		});
+	});
+
 	describe('getTimeDifference', () => {
 		it('returns milliseconds when format is falsy', () => {
 			expect(

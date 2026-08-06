@@ -94,6 +94,18 @@ describe('EventTracker class', () => {
 				expect(response).toBeTruthy();
 			});
 
+			it('a new start when the history carries an event with a corrupted time', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+					{id: '345', type: 'pause', time: 'garbage', payload: '{}'},
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.addEvent({id: '345', type: 'start'});
+
+				expect(response).toBeTruthy();
+			});
+
 			it('a pause within a reopened cycle', async () => {
 				searchFn.mockResolvedValueOnce([
 					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
