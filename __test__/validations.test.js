@@ -1,6 +1,26 @@
 import Validations from '../utils/validations';
+import EventTracker, {EVENT_TYPES} from '../lib/event-tracker';
+import {VALID_EVENT_TYPES, OPENER_TYPES, CLOSER_TYPES} from '../utils/eventTypes';
 
 describe('Validations', () => {
+	describe('EVENT_TYPES', () => {
+		it('is exported from the package entry point without shadowing the default export', () => {
+			expect(EventTracker).toBeInstanceOf(Function);
+			expect(EVENT_TYPES).toStrictEqual({
+				START: 'start',
+				PAUSE: 'pause',
+				RESUME: 'resume',
+				FINISH: 'finish',
+			});
+		});
+
+		it('derives the valid, opener and closer type lists from the same vocabulary', () => {
+			expect(VALID_EVENT_TYPES).toStrictEqual(['start', 'pause', 'resume', 'finish']);
+			expect(OPENER_TYPES).toStrictEqual(['start', 'resume']);
+			expect(CLOSER_TYPES).toStrictEqual(['pause', 'finish']);
+		});
+	});
+
 	describe('isValidEventType', () => {
 		it.each(['start', 'pause', 'resume', 'finish', 'START'])('accepts %s', (type) => {
 			expect(Validations.isValidEventType(type)).toBe(true);

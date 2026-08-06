@@ -1,22 +1,21 @@
 import EventTrackerError from "../lib/event-tracker-error";
 import Helpers from "./helpers";
+import {EVENT_TYPES, VALID_EVENT_TYPES} from "./eventTypes";
 
 class Validations {
     /**
      * @name isValidEventType
      * @description returns a boolean indicating whether the type is valid or not
-     * @param {string} type 
+     * @param {string} type
      * @returns {boolean}
-     * 
-     * @example 
+     *
+     * @example
      *  Event.isValidEventType('start') => true;
      *  Event.isValidEventType('START') => true;
      *  Event.isValidEventType('started') => false;
      */
     static isValidEventType (type) {
-        const validTypes = ['start','pause','resume','finish']
-
-        return validTypes.includes(type.toLowerCase());
+        return VALID_EVENT_TYPES.includes(type.toLowerCase());
     }
 
     static idValidation (id) {
@@ -41,30 +40,30 @@ class Validations {
     static validateEventsSequence (type,previousType = '') {
 
         switch(type) {
-            case 'start':
-                if(previousType === 'start') throw new EventTrackerError(`Forbidden event: only one start record is allowed per cycle`);
+            case EVENT_TYPES.START:
+                if(previousType === EVENT_TYPES.START) throw new EventTrackerError(`Forbidden event: only one start record is allowed per cycle`);
 
-                if(previousType === 'pause' || previousType === 'resume') throw new EventTrackerError(`Forbidden event: there is a cycle in progress`);
+                if(previousType === EVENT_TYPES.PAUSE || previousType === EVENT_TYPES.RESUME) throw new EventTrackerError(`Forbidden event: there is a cycle in progress`);
                 break;
 
-            case 'pause':
-                let validPreviousTypes = ['start','resume'];
+            case EVENT_TYPES.PAUSE:
+                let validPreviousTypes = [EVENT_TYPES.START, EVENT_TYPES.RESUME];
 
-                if(previousType === 'pause') throw new EventTrackerError(`Forbidden event: record is already paused`);
+                if(previousType === EVENT_TYPES.PAUSE) throw new EventTrackerError(`Forbidden event: record is already paused`);
 
                 if(!previousType || !validPreviousTypes.includes(previousType)) throw new EventTrackerError("Forbidden event: record can't be paused")
                 break;
 
-            case 'resume':
-                if(previousType === 'resume') throw new EventTrackerError(`Forbidden event: the record is already being continued`);
+            case EVENT_TYPES.RESUME:
+                if(previousType === EVENT_TYPES.RESUME) throw new EventTrackerError(`Forbidden event: the record is already being continued`);
 
-                if(previousType !== 'pause') throw new EventTrackerError("Forbidden event: record wasn't paused");
+                if(previousType !== EVENT_TYPES.PAUSE) throw new EventTrackerError("Forbidden event: record wasn't paused");
                 break;
 
-            case 'finish':
+            case EVENT_TYPES.FINISH:
                 if(previousType === '') throw new EventTrackerError(`Forbidden event: record wasn't started`);
 
-                if(previousType === 'finish') throw new EventTrackerError(`Forbidden event: record is already finished`);
+                if(previousType === EVENT_TYPES.FINISH) throw new EventTrackerError(`Forbidden event: record is already finished`);
                 break;
         }
 
