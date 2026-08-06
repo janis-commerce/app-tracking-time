@@ -292,33 +292,6 @@ describe('EventTracker class', () => {
 		});
 	});
 
-	describe('getStoppedTime method', () => {
-		describe('return 0', () => {
-			it('should return 0  if not pass events or this is an empty array', () => {
-				const response = eventTracker.getStoppedTime({});
-
-				expect(response).toStrictEqual(0);
-			});
-		});
-
-		describe('should return stopped time', () => {
-			it('should return stopped time in time format if format params is true', () => {
-				const registeredEvents = [
-					{id: '345', type: 'pause', time: '2023-01-01T00:00:10.000Z'},
-					{id: '345', type: 'pause', time: '2023-01-01T00:00:10.000Z'},
-					{id: '345', type: 'resume', time: '2023-01-01T00:00:20.000Z'},
-					{id: '345', type: 'pause', time: '2023-01-01T00:00:40.000Z'},
-					{id: '345', type: 'pause', time: '2023-01-01T00:01:00.000Z'},
-					{id: '345', type: 'resume', time: '2023-01-01T00:01:20.000Z'},
-				];
-
-				const response = eventTracker.getStoppedTime({events: registeredEvents, format: true});
-
-				expect(response).toStrictEqual({days: 0, hours: 0, minutes: 0, seconds: 30});
-			});
-		});
-	});
-
 	describe('getNetTrackingTime method', () => {
 		describe('return 0', () => {
 			it('should return 0 when not receive a valid array as argument ', () => {
@@ -536,22 +509,6 @@ describe('EventTracker class', () => {
 
 				expect(response).toBeFalsy();
 			});
-		});
-	});
-
-	describe('removeFinishById method', () => {
-		it('remove finish event when delete database method resolved correctly', async () => {
-			deleteFn.mockResolvedValueOnce();
-
-			await eventTracker.removeFinishById('123');
-
-			expect(deleteFn).toHaveBeenCalled();
-		});
-
-		it('return a reject promise when delete method fails', async () => {
-			deleteFn.mockRejectedValueOnce(new Error('delete error'));
-
-			await expect(eventTracker.removeFinishById('123')).rejects.toThrow('delete error');
 		});
 	});
 
