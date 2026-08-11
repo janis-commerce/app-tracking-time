@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: `getNetTrackingTime` no longer counts a trailing open span against `now`: a record in progress contributes 0 for its open span (compute live time on the caller side). Release as a major version
 - `finish` over an already finished record is now rejected (previously allowed, which could stack duplicate finish events)
 - Widened the 100% coverage gate to every source file (`lib/**` and `utils/**`, excluding the Realm-native `database.js`) — it previously measured only `event-tracker.js`; added dedicated test suites for the state machine (`validations`), `helpers` and `event`
-- Moved realm from dependencies to peerDependencies
-- Moved date-fns from dependencies to devDependencies (pinned to ^4.1.0 for CI) keeping the wide peer range: declaring it as both a dependency and a peer allowed npm to materialize a nested copy alongside the consumer's one
+- **BREAKING**: moved realm from dependencies to peerDependencies — a consumer that does not declare it no longer receives it transitively. Release as a major version
+- **BREAKING**: moved date-fns from dependencies to devDependencies (pinned to ^4.1.0 for CI) keeping the wide peer range: declaring it as both a dependency and a peer allowed npm to materialize a nested copy alongside the consumer's one. A consumer that does not declare date-fns no longer receives it transitively: `npm install` resolves peers on its own, but with `--legacy-peer-deps` (or yarn 1) it is not installed and nothing is reported at install time — the `import` fails at runtime with `Cannot find module 'date-fns'`. Release as a major version
 - Widened realm peer dependency range to ^11.0.0 || ^20.0.0
 - Widened date-fns range from <3.0.0 to <5.0.0
 - Widened react-native peer dependency range to >=0.71.5 <0.82.0

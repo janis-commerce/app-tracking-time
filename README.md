@@ -16,6 +16,8 @@ To ensure the proper functioning of this library, make sure that the following d
 
 These dependencies are required for the library to work correctly. Ensure that your project has these versions installed to avoid compatibility issues.
 
+> **Upgrading from 2.x**: `date-fns` and `realm` used to be bundled as dependencies of this package, so they arrived transitively. From 3.0.0 they are peer dependencies only — if your app does not already depend on them, declare them explicitly. Installing with `--legacy-peer-deps` (or yarn 1) does not resolve peers and reports nothing, so a missing `date-fns` surfaces at runtime as `Cannot find module 'date-fns'`.
+
 ## Installation
 
 ```bash
