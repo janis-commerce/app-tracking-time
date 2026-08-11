@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING**: `getStoppedTime`. It was orphaned by the `getNetTrackingTime` rewrite (spans are summed one by one, so there is nothing to subtract), had no consumer, mutated the events it received and assumed chronological order without sorting. Release as a major version
 - **BREAKING**: `removeFinishById`. Deleting finish events corrupts multi-cycle histories: it deleted EVERY finish of the id, losing already-closed cycles. To rework a finished record, open a new cycle with a `start` event. Release as a major version
+- **BREAKING**: `isEventStarted`. It answered "does this record have any `start`?", which with multi-cycle records is true even when every cycle is already closed — the useful question became "is a cycle open?", answered by checking whether the last event is a `start` or a `resume`. It had no consumer and was not documented. Release as a major version
 - Internal helpers `findEventByStatus` and `reverseArray` (orphaned by the `getNetTrackingTime` rewrite and the `getLastEventById` fix)
 
 ## [2.3.0] - 2025-11-06

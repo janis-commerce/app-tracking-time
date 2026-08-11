@@ -487,31 +487,6 @@ describe('EventTracker class', () => {
 		});
 	});
 
-	describe('isEventStarted method', () => {
-		describe('throws an error when', () => {
-			it('id is invalid or null', () => {
-				expect(eventTracker.isEventStarted()).rejects.toThrow('ID is invalid or null');
-			});
-		});
-
-		describe('returns a boolean indicating whether the id was started or not', () => {
-			it('if id is started, return true', async () => {
-				searchFn.mockResolvedValueOnce([{id: '123', type: 'start'}]);
-
-				const response = await eventTracker.isEventStarted('123');
-
-				expect(response).toBeTruthy();
-			});
-
-			it('return false when the id wasnt initialized', async () => {
-				searchFn.mockResolvedValueOnce([]);
-				const response = await eventTracker.isEventStarted('345');
-
-				expect(response).toBeFalsy();
-			});
-		});
-	});
-
 	describe('getIdTimeByType method', () => {
 		describe('throws an error when', () => {
 			it('passed id is invalid', async () => {
