@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `EVENT_TYPES` is now exported from the package entry point (named export, the default export is unchanged) and used internally, so consumers stop repeating the type literals on their side
 - `Helpers.sortValidEventsByTime`: single place that discards events with an invalid `time` and returns the rest in chronological order
 - Beta publish workflow for pre-release branches
+- ESLint configuration
+- `lint:fix` script
 
 ### Changed
 
@@ -29,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Widened react peer dependency range to >=18.2.0 <20.0.0
 - Standardized Node.js to v22 in .nvmrc and all CI workflows
 - Upgraded GitHub Actions to v4 (checkout, setup-node)
+- Formatting normalized across the repo with `eslint --fix`
+- `Database.save` now throws its error instead of returning a rejected promise
 
 ### Fixed
 

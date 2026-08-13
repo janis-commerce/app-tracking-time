@@ -60,19 +60,19 @@ describe('Helpers', () => {
 	describe('getTimeDifference', () => {
 		it('returns milliseconds when format is falsy', () => {
 			expect(
-				Helpers.getTimeDifference('2026-07-30T10:00:00.000Z', '2026-07-30T10:00:05.000Z', false)
+				Helpers.getTimeDifference('2026-07-30T10:00:00.000Z', '2026-07-30T10:00:05.000Z', false),
 			).toBe(5000);
 		});
 
 		it('returns the formatted object with days zeroed for a same-day span', () => {
 			expect(
-				Helpers.getTimeDifference('2026-07-30T10:00:00.000Z', '2026-07-30T11:30:20.000Z', true)
+				Helpers.getTimeDifference('2026-07-30T10:00:00.000Z', '2026-07-30T11:30:20.000Z', true),
 			).toStrictEqual({days: 0, hours: 1, minutes: 30, seconds: 20});
 		});
 
 		it('keeps the days for a span across different days', () => {
 			expect(
-				Helpers.getTimeDifference('2026-07-29T10:00:00.000Z', '2026-07-31T12:00:00.000Z', true)
+				Helpers.getTimeDifference('2026-07-29T10:00:00.000Z', '2026-07-31T12:00:00.000Z', true),
 			).toStrictEqual({days: 2, hours: 2, minutes: 0, seconds: 0});
 		});
 	});
@@ -122,12 +122,18 @@ describe('Helpers', () => {
 
 	describe('promiseWrapper', () => {
 		it('resolves to [data, null] on success', async () => {
-			await expect(Helpers.promiseWrapper(Promise.resolve('ok'))).resolves.toStrictEqual(['ok', null]);
+			await expect(Helpers.promiseWrapper(Promise.resolve('ok'))).resolves.toStrictEqual([
+				'ok',
+				null,
+			]);
 		});
 
 		it('resolves to [null, error] on failure', async () => {
 			const error = new Error('boom');
-			await expect(Helpers.promiseWrapper(Promise.reject(error))).resolves.toStrictEqual([null, error]);
+			await expect(Helpers.promiseWrapper(Promise.reject(error))).resolves.toStrictEqual([
+				null,
+				error,
+			]);
 		});
 	});
 });

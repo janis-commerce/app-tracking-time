@@ -42,7 +42,12 @@ describe('Event', () => {
 			const circular = {};
 			circular.self = circular;
 
-			const parsed = Event.parseEventForDB({id: '123', type: 'start', time: 't', payload: circular});
+			const parsed = Event.parseEventForDB({
+				id: '123',
+				type: 'start',
+				time: 't',
+				payload: circular,
+			});
 
 			expect(parsed.payload).toBe('{}');
 		});
@@ -59,13 +64,23 @@ describe('Event', () => {
 
 	describe('parseEventFromDB', () => {
 		it('parses the JSON payload back into an object', () => {
-			const parsed = Event.parseEventFromDB({id: '123', type: 'start', time: 't', payload: '{"a":1}'});
+			const parsed = Event.parseEventFromDB({
+				id: '123',
+				type: 'start',
+				time: 't',
+				payload: '{"a":1}',
+			});
 
 			expect(parsed.payload).toStrictEqual({a: 1});
 		});
 
 		it('returns the raw payload when it is not valid JSON', () => {
-			const parsed = Event.parseEventFromDB({id: '123', type: 'start', time: 't', payload: undefined});
+			const parsed = Event.parseEventFromDB({
+				id: '123',
+				type: 'start',
+				time: 't',
+				payload: undefined,
+			});
 
 			expect(parsed.payload).toBeUndefined();
 		});

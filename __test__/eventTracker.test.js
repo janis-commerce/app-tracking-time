@@ -56,9 +56,7 @@ describe('EventTracker class', () => {
 
 				await eventTracker.addEvent({id: '345', type: 'START', time: '2023-01-01T00:00:00.000Z'});
 
-				expect(saveFn).toHaveBeenCalledWith(
-					expect.objectContaining({id: '345', type: 'start'}),
-				);
+				expect(saveFn).toHaveBeenCalledWith(expect.objectContaining({id: '345', type: 'start'}));
 			});
 
 			it('an uppercase type does not bypass the sequence validation', async () => {

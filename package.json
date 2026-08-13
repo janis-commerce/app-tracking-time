@@ -4,7 +4,8 @@
   "description": "A package for managing the times of actions in applications",
   "main": "lib/event-tracker.js",
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . --ext .js,.jsx",
+    "lint:fix": "eslint . --ext .js,.jsx --fix",
     "prepare": "husky install",
     "test": "jest",
     "test:coverage": "jest --collectCoverage"

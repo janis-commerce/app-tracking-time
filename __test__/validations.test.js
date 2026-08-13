@@ -68,7 +68,7 @@ describe('Validations', () => {
 			'rejects the non-canonical format %s',
 			(date) => {
 				expect(Validations.isValidISOString(date)).toBe(false);
-			}
+			},
 		);
 	});
 
@@ -80,15 +80,18 @@ describe('Validations', () => {
 
 			it('rejects start over an open cycle (previous start)', () => {
 				expect(() => Validations.validateEventsSequence('start', 'start')).toThrow(
-					'only one start record is allowed per cycle'
+					'only one start record is allowed per cycle',
 				);
 			});
 
-			it.each(['pause', 'resume'])('rejects start while a cycle is in progress (previous %s)', (previous) => {
-				expect(() => Validations.validateEventsSequence('start', previous)).toThrow(
-					'there is a cycle in progress'
-				);
-			});
+			it.each(['pause', 'resume'])(
+				'rejects start while a cycle is in progress (previous %s)',
+				(previous) => {
+					expect(() => Validations.validateEventsSequence('start', previous)).toThrow(
+						'there is a cycle in progress',
+					);
+				},
+			);
 		});
 
 		describe('pause', () => {
@@ -98,13 +101,13 @@ describe('Validations', () => {
 
 			it('rejects pause when the record is already paused', () => {
 				expect(() => Validations.validateEventsSequence('pause', 'pause')).toThrow(
-					'record is already paused'
+					'record is already paused',
 				);
 			});
 
 			it.each([undefined, 'finish'])('rejects pause when the previous event is %s', (previous) => {
 				expect(() => Validations.validateEventsSequence('pause', previous)).toThrow(
-					"record can't be paused"
+					"record can't be paused",
 				);
 			});
 		});
@@ -116,31 +119,37 @@ describe('Validations', () => {
 
 			it('rejects resume when the record is already being continued', () => {
 				expect(() => Validations.validateEventsSequence('resume', 'resume')).toThrow(
-					'the record is already being continued'
+					'the record is already being continued',
 				);
 			});
 
-			it.each(['start', 'finish', undefined])('rejects resume when the previous event is %s', (previous) => {
-				expect(() => Validations.validateEventsSequence('resume', previous)).toThrow(
-					"record wasn't paused"
-				);
-			});
+			it.each(['start', 'finish', undefined])(
+				'rejects resume when the previous event is %s',
+				(previous) => {
+					expect(() => Validations.validateEventsSequence('resume', previous)).toThrow(
+						"record wasn't paused",
+					);
+				},
+			);
 		});
 
 		describe('finish', () => {
-			it.each(['start', 'pause', 'resume'])('allows finish when the previous event is %s', (previous) => {
-				expect(() => Validations.validateEventsSequence('finish', previous)).not.toThrow();
-			});
+			it.each(['start', 'pause', 'resume'])(
+				'allows finish when the previous event is %s',
+				(previous) => {
+					expect(() => Validations.validateEventsSequence('finish', previous)).not.toThrow();
+				},
+			);
 
 			it('rejects finish when the record was never started', () => {
 				expect(() => Validations.validateEventsSequence('finish', undefined)).toThrow(
-					"record wasn't started"
+					"record wasn't started",
 				);
 			});
 
 			it('rejects finish over an already finished record', () => {
 				expect(() => Validations.validateEventsSequence('finish', 'finish')).toThrow(
-					'record is already finished'
+					'record is already finished',
 				);
 			});
 		});
@@ -148,7 +157,7 @@ describe('Validations', () => {
 		describe('normalization', () => {
 			it('validates an uppercase type instead of letting it through unchecked', () => {
 				expect(() => Validations.validateEventsSequence('START', 'start')).toThrow(
-					'only one start record is allowed per cycle'
+					'only one start record is allowed per cycle',
 				);
 			});
 
@@ -158,7 +167,7 @@ describe('Validations', () => {
 
 			it.each(['started', undefined, 123])('rejects the unknown type %p', (type) => {
 				expect(() => Validations.validateEventsSequence(type, 'start')).toThrow(
-					'Event type is invalid'
+					'Event type is invalid',
 				);
 			});
 		});
