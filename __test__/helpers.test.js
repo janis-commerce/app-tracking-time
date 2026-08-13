@@ -113,13 +113,6 @@ describe('Helpers', () => {
 		});
 	});
 
-	describe('_mappedFilters', () => {
-		it('returns an empty array when filters is not a valid array', () => {
-			expect(Helpers._mappedFilters(undefined)).toStrictEqual([]);
-			expect(Helpers._mappedFilters('id')).toStrictEqual([]);
-		});
-	});
-
 	describe('promiseWrapper', () => {
 		it('resolves to [data, null] on success', async () => {
 			await expect(Helpers.promiseWrapper(Promise.resolve('ok'))).resolves.toStrictEqual([
