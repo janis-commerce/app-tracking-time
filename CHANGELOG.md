@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ESLint configuration
+- `lint:fix` script
+
+### Changed
+
+- Formatting normalized across the repo with `eslint --fix`
+- `Database.save` now throws its error instead of returning a rejected promise
+
 ## [2.3.0] - 2025-11-06
 
 ### Added
