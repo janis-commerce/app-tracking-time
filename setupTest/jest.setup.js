@@ -3,21 +3,20 @@ jest.mock('date-fns', () => {
 
 	return {
 		...lib,
-		isSameDay: jest.fn(lib.isSameDay), 
-		differenceInMilliseconds: jest.fn(lib.differenceInMilliseconds)
+		isSameDay: jest.fn(lib.isSameDay),
+		differenceInMilliseconds: jest.fn(lib.differenceInMilliseconds),
 	};
 });
 
-
 jest.mock('react-native', () => {
 	return {
-	  AppState: {
-		addEventListener: jest.fn(),
-		removeEventListener: jest.fn(),
-		currentState: 'active',
-	  },
+		AppState: {
+			addEventListener: jest.fn(),
+			removeEventListener: jest.fn(),
+			currentState: 'active',
+		},
 	};
-  });
+});
 
 jest.mock('react-native-fs', () => ({
 	mkdir: jest.fn(),
