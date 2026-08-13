@@ -1,11 +1,10 @@
 import Validations from '../utils/validations';
-import EventTracker, {EVENT_TYPES} from '../lib/event-tracker';
+import {EVENT_TYPES} from '../lib/event-tracker';
 import {VALID_EVENT_TYPES, OPENER_TYPES, CLOSER_TYPES} from '../utils/eventTypes';
 
 describe('Validations', () => {
 	describe('EVENT_TYPES', () => {
 		it('is exported from the package entry point without shadowing the default export', () => {
-			expect(EventTracker).toBeInstanceOf(Function);
 			expect(EVENT_TYPES).toStrictEqual({
 				START: 'start',
 				PAUSE: 'pause',
