@@ -48,6 +48,125 @@ describe('EventTracker class', () => {
 				expect(response).toBeTruthy();
 			});
 		});
+
+		describe('normalizes the received type so that', () => {
+			it('the persisted event keeps the canonical lowercase type', async () => {
+				searchFn.mockResolvedValueOnce([]);
+				saveFn.mockResolvedValueOnce();
+
+				await eventTracker.addEvent({id: '345', type: 'START', time: '2023-01-01T00:00:00.000Z'});
+
+				expect(saveFn).toHaveBeenCalledWith(expect.objectContaining({id: '345', type: 'start'}));
+			});
+
+			it('an uppercase type does not bypass the sequence validation', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'START'})).rejects.toThrow(
+					'only one start record is allowed per cycle',
+				);
+			});
+
+			it('a missing type rejects with an EventTrackerError instead of a TypeError', async () => {
+				await expect(eventTracker.addEvent({id: '345'})).rejects.toThrow('Event type is invalid');
+			});
+
+			it('a call without params rejects with the id error', async () => {
+				await expect(eventTracker.addEvent()).rejects.toThrow('ID is invalid or null');
+			});
+		});
+	});
+
+	describe('multi-cycle events sequence', () => {
+		describe('allows', () => {
+			it('a new start after a finish (reopens the record with a new cycle)', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.addEvent({id: '345', type: 'start'});
+
+				expect(response).toBeTruthy();
+			});
+
+			it('a new start when the history carries an event with a corrupted time', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+					{id: '345', type: 'pause', time: 'garbage', payload: '{}'},
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.addEvent({id: '345', type: 'start'});
+
+				expect(response).toBeTruthy();
+			});
+
+			it('a pause within a reopened cycle', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.addEvent({id: '345', type: 'pause'});
+
+				expect(response).toBeTruthy();
+			});
+		});
+
+		describe('rejects', () => {
+			it('a second start while a cycle is open', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'start'})).rejects.toThrow(
+					'only one start record is allowed per cycle',
+				);
+			});
+
+			it('a start while the cycle is paused', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'pause', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'start'})).rejects.toThrow(
+					'there is a cycle in progress',
+				);
+			});
+
+			it('a finish over an already finished record', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'finish'})).rejects.toThrow(
+					'record is already finished',
+				);
+			});
+
+			it('a resume after a finish', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'resume'})).rejects.toThrow(
+					"record wasn't paused",
+				);
+			});
+
+			it('a pause after a finish', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				await expect(eventTracker.addEvent({id: '345', type: 'pause'})).rejects.toThrow(
+					"record can't be paused",
+				);
+			});
+		});
 	});
 	describe('getEventsById method', () => {
 		describe('throws an error when', () => {
@@ -69,6 +188,17 @@ describe('EventTracker class', () => {
 					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: {}},
 					{id: '345', type: 'pause', time: '2023-01-01T00:00:00.000Z', payload: {}},
 				]);
+			});
+
+			it('returns events in chronological order even when storage order is shuffled', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'finish', time: '2023-01-01T00:10:00.000Z', payload: '{}'},
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.getEventsById('345');
+
+				expect(response.map((event) => event.type)).toStrictEqual(['start', 'finish']);
 			});
 		});
 	});
@@ -100,6 +230,17 @@ describe('EventTracker class', () => {
 				time: '2023-01-01T00:00:00.000Z',
 				payload: {userId: '123', warehouseId: '123-wh'},
 			});
+		});
+
+		it('returns the chronologically last event even when storage order is shuffled', async () => {
+			searchFn.mockResolvedValueOnce([
+				{id: '345', type: 'finish', time: '2023-01-01T00:10:00.000Z'},
+				{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z'},
+			]);
+
+			const typeResponse = await eventTracker.getLastEventById('345');
+
+			expect(typeResponse.type).toStrictEqual('finish');
 		});
 	});
 
@@ -149,39 +290,18 @@ describe('EventTracker class', () => {
 		});
 	});
 
-	describe('getStoppedTime method', () => {
-		describe('return 0', () => {
-			it('should return 0  if not pass events or this is an empty array', () => {
-				const response = eventTracker.getStoppedTime({});
-
-				expect(response).toStrictEqual(0);
-			});
-		});
-
-		describe('should return stopped time', () => {
-			it('should return stopped time in time format if format params is true', () => {
-				const registeredEvents = [
-					{id: '345', type: 'pause', time: '2023-01-01T00:00:10.000Z'},
-					{id: '345', type: 'pause', time: '2023-01-01T00:00:10.000Z'},
-					{id: '345', type: 'resume', time: '2023-01-01T00:00:20.000Z'},
-					{id: '345', type: 'pause', time: '2023-01-01T00:00:40.000Z'},
-					{id: '345', type: 'pause', time: '2023-01-01T00:01:00.000Z'},
-					{id: '345', type: 'resume', time: '2023-01-01T00:01:20.000Z'},
-				];
-
-				const response = eventTracker.getStoppedTime({events: registeredEvents, format: true});
-
-				expect(response).toStrictEqual({days: 0, hours: 0, minutes: 0, seconds: 30});
-			});
-		});
-	});
-
 	describe('getNetTrackingTime method', () => {
 		describe('return 0', () => {
 			it('should return 0 when not receive a valid array as argument ', () => {
 				const response = eventTracker.getNetTrackingTime({});
 
 				expect(response).toStrictEqual(0);
+			});
+
+			it('should return the formatted zero object when not receive a valid array and format is true', () => {
+				const response = eventTracker.getNetTrackingTime({format: true});
+
+				expect(response).toStrictEqual(DEFAULT_ELAPSED_TIME);
 			});
 
 			it('should return 0 when elapsed time is 0 or less than 0', () => {
@@ -220,6 +340,107 @@ describe('EventTracker class', () => {
 				const response = eventTracker.getNetTrackingTime({events, format: true});
 
 				expect(response).toStrictEqual({days: 0, hours: 0, minutes: 0, seconds: 15});
+			});
+		});
+
+		describe('should support multiple cycles', () => {
+			it('should sum the active spans of every start-finish cycle', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+					{id: '345', type: 'pause', time: '2023-01-01T00:10:05.000Z'},
+					{id: '345', type: 'resume', time: '2023-01-01T00:20:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:20:15.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(30000);
+			});
+
+			it('should not count a trailing open span when the record is in progress', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+		});
+
+		describe('should tolerate dirty histories', () => {
+			it('should ignore stacked finish events from legacy data', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:30:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+
+			it('should close the span on a finish emitted directly after a pause', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'pause', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+
+			it('should sort events by time when storage order is not chronological', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:10:05.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(15000);
+			});
+
+			it('should ignore events with an invalid time without wiping valid cycles', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'finish', time: undefined},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
+			});
+
+			it('should return the formatted zero object for an in-progress record with format true', () => {
+				const events = [{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'}];
+
+				const response = eventTracker.getNetTrackingTime({events, format: true});
+
+				expect(response).toStrictEqual({days: 0, hours: 0, minutes: 0, seconds: 0});
+			});
+
+			it('should neutralize a device clock regression via sorting', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:00:20.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:09:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(10000);
 			});
 		});
 	});
@@ -264,47 +485,6 @@ describe('EventTracker class', () => {
 		});
 	});
 
-	describe('isEventStarted method', () => {
-		describe('throws an error when', () => {
-			it('id is invalid or null', () => {
-				expect(eventTracker.isEventStarted()).rejects.toThrow('ID is invalid or null');
-			});
-		});
-
-		describe('returns a boolean indicating whether the id was started or not', () => {
-			it('if id is started, return true', async () => {
-				searchFn.mockResolvedValueOnce([{id: '123', type: 'start'}]);
-
-				const response = await eventTracker.isEventStarted('123');
-
-				expect(response).toBeTruthy();
-			});
-
-			it('return false when the id wasnt initialized', async () => {
-				searchFn.mockResolvedValueOnce([]);
-				const response = await eventTracker.isEventStarted('345');
-
-				expect(response).toBeFalsy();
-			});
-		});
-	});
-
-	describe('removeFinishById method', () => {
-		it('remove finish event when delete database method resolved correctly', async () => {
-			deleteFn.mockResolvedValueOnce();
-
-			await eventTracker.removeFinishById('123');
-
-			expect(deleteFn).toHaveBeenCalled();
-		});
-
-		it('return a reject promise when delete method fails', async () => {
-			deleteFn.mockRejectedValueOnce(new Error('delete error'));
-
-			await expect(eventTracker.removeFinishById('123')).rejects.toThrow('delete error');
-		});
-	});
-
 	describe('getIdTimeByType method', () => {
 		describe('throws an error when', () => {
 			it('passed id is invalid', async () => {
@@ -319,6 +499,14 @@ describe('EventTracker class', () => {
 		});
 
 		describe('return null', () => {
+			it('should return null when there are no events for the id and type', async () => {
+				searchFn.mockResolvedValueOnce([]);
+
+				const time = await eventTracker.getIdTimeByType('123', 'finish');
+
+				expect(time).toBeNull();
+			});
+
 			it('should return null when finded event not contains time key', async () => {
 				searchFn.mockResolvedValueOnce([{id: '123', type: 'start', payload: {}}]);
 
@@ -337,6 +525,29 @@ describe('EventTracker class', () => {
 				const time = await eventTracker.getIdTimeByType('123', 'start');
 
 				expect(time).toStrictEqual('2023-01-02T00:00:00.000Z');
+			});
+
+			it('should query storage with the normalized type when it arrives uppercased', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '123', type: 'start', payload: {}, time: '2023-01-02T00:00:00.000Z'},
+				]);
+
+				const time = await eventTracker.getIdTimeByType('123', 'START');
+
+				expect(searchFn).toHaveBeenCalledWith('id LIKE[c] $0 && type = $1', '123', 'start');
+				expect(time).toStrictEqual('2023-01-02T00:00:00.000Z');
+			});
+
+			it('should return the chronologically last time when storage order is not chronological', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '123', type: 'start', payload: {}, time: '2023-01-03T00:00:00.000Z'},
+					{id: '123', type: 'start', payload: {}, time: '2023-01-01T00:00:00.000Z'},
+					{id: '123', type: 'start', payload: {}, time: '2023-01-02T00:00:00.000Z'},
+				]);
+
+				const time = await eventTracker.getIdTimeByType('123', 'start');
+
+				expect(time).toStrictEqual('2023-01-03T00:00:00.000Z');
 			});
 		});
 	});

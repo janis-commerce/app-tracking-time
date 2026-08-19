@@ -1,6 +1,6 @@
 {
   "name": "@janiscommerce/app-tracking-time",
-  "version": "2.3.0",
+  "version": "3.0.0-beta.2",
   "description": "A package for managing the times of actions in applications",
   "main": "lib/event-tracker.js",
   "scripts": {
@@ -28,10 +28,6 @@
   ],
   "author": "Janis commerce",
   "license": "ISC",
-  "dependencies": {
-    "date-fns": ">=2.0.0 <3.0.0",
-    "realm": "^11.0.0"
-  },
   "devDependencies": {
     "@babel/core": "^7.23.7",
     "@babel/eslint-parser": "^7.23.3",
@@ -39,6 +35,7 @@
     "@babel/preset-env": "^7.12.0",
     "@babel/preset-react": "^7.22.5",
     "babel-jest": "^29.7.0",
+    "date-fns": "^4.1.0",
     "eslint": "^8.56.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.1.0",
@@ -49,13 +46,15 @@
     "prettier": "3.2.4",
     "react": "^18.2.0",
     "react-native": "^0.71.5",
-    "react-native-fs": "^2.20.0"
+    "react-native-fs": "^2.20.0",
+    "realm": "^11.0.0"
   },
   "peerDependencies": {
-    "date-fns": ">=2.0.0 <3.0.0",
-    "react": ">=18.2.0 <19.0.0",
-    "react-native": ">=0.71.5 <0.75.0",
-    "realm": "^11.0.0"
+    "date-fns": ">=2.0.0 <5.0.0",
+    "react": ">=18.2.0 <20.0.0",
+    "react-native": ">=0.71.5 <0.82.0",
+    "react-native-fs": "^2.20.0",
+    "realm": "^11.0.0 || ^20.0.0"
   },
   "bugs": {
     "url": "https://github.com/janis-commerce/app-tracking-time/issues"

@@ -15,12 +15,12 @@ jobs:
       contents: write
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Use Node.js 16.x
-      uses: actions/setup-node@v1
+    - name: Use Node.js 22
+      uses: actions/setup-node@v4
       with:
-        node-version: 16.x
+        node-version: 22
 
     - name: build readme
       run: |
