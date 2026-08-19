@@ -12,11 +12,12 @@ To ensure the proper functioning of this library, make sure that the following d
 - **`date-fns`**: `>=2.0.0 <5.0.0`
 - **`react`**: `>=18.2.0 <20.0.0`
 - **`react-native`**: `>=0.71.5 <0.82.0`
+- **`react-native-fs`**: `^2.20.0`
 - **`realm`**: `^11.0.0 || ^20.0.0`
 
 These dependencies are required for the library to work correctly. Ensure that your project has these versions installed to avoid compatibility issues.
 
-> **Upgrading from 2.x**: `date-fns` and `realm` used to be bundled as dependencies of this package, so they arrived transitively. From 3.0.0 they are peer dependencies only — if your app does not already depend on them, declare them explicitly. Installing with `--legacy-peer-deps` (or yarn 1) does not resolve peers and reports nothing, so a missing `date-fns` surfaces at runtime as `Cannot find module 'date-fns'`.
+> **Upgrading from 2.x**: `date-fns` and `realm` used to be bundled as dependencies of this package, so they arrived transitively, and `react-native-fs` was not declared at all even though it is used at runtime. From 3.0.0 the three are peer dependencies — if your app does not already depend on them, declare them explicitly. Installing with `--legacy-peer-deps` (or yarn 1) does not resolve peers and reports nothing, so a missing peer only surfaces at runtime: `date-fns` on the first time calculation, and `react-native-fs` as soon as `EventTracker` is instantiated.
 
 ## Installation
 
