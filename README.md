@@ -111,6 +111,8 @@ For example, you will not be able to store 2 pause type events consecutively.
 
 A record supports **multiple `start → finish` cycles**: a `finish` event closes the current cycle, and a new `start` right after it opens a new cycle without deleting the previous ones. A `finish` over an already finished record, or a `start` while a cycle is still in progress (`start`, `pause` or `resume` as the last event), is rejected. `getNetTrackingTime` returns the sum of every active span (`start|resume → pause|finish`) across all cycles; a trailing open span (record in progress) is not counted — compute live time on the caller side.
 
-If you want to know what was the last event that was stored for a particular id, you can call the getLastEventById method, which will return an object with the information of the last stored event, including the type.
+If you want to know what was the last event of a particular id, you can call the getLastEventById method, which will return an object with the information of that event, including the type.
 
-Every method that reads events returns them in chronological order and discards records with an invalid `time`: storage order is not guaranteed, and a single corrupted date would otherwise leave the whole read unsorted.
+`getEventsById` returns the events in chronological order, `getLastEventById` returns the chronologically last one, and `getIdTimeByType` returns the `time` of the chronologically last one of that type. Storage order is not guaranteed, so the three sort by `time` and discard records with an invalid `time` (a single corrupted date would otherwise leave the whole read unsorted). `getNetTrackingTime` does the same with the events it receives.
+
+`searchEventByQuery` is the exception: it returns the records as the query yields them, in storage order unless the query itself sorts. If order matters, sort in the query (`searchEventByQuery('id == $0 SORT(time ASC)', id)`) or use the methods above.
