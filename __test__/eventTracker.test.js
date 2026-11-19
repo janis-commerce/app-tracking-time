@@ -461,6 +461,19 @@ describe('EventTracker class', () => {
 				expect(response).toStrictEqual(15000);
 			});
 
+			it('should drop an opener while a span is already open, so overlapping cycles under-count', () => {
+				const events = [
+					{id: '345', type: 'start', time: '2023-01-01T10:00:00.000Z'},
+					{id: '345', type: 'start', time: '2023-01-01T10:02:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T10:05:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T10:08:00.000Z'},
+				];
+
+				const response = eventTracker.getNetTrackingTime({events});
+
+				expect(response).toStrictEqual(300000);
+			});
+
 			it('should ignore events with an invalid time without wiping valid cycles', () => {
 				const events = [
 					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
