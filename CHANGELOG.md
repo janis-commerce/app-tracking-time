@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **BREAKING**: declared react-native-fs as a peer dependency (it stays in devDependencies for CI). It was only in devDependencies while `lib/database.js` imports it at runtime — `RNFS.DocumentDirectoryPath` runs in the `Database` constructor, so a consumer without it fails when instantiating `EventTracker`, not in an optional method. It used to work only because almost every RN app already installs it. Release as a major version
+- **BREAKING**: the `realm` peer range is now `^12.0.0 || ^20.0.0`, so an app on Realm 12 installs without needing an `overrides` or `--legacy-peer-deps` to get past the `ERESOLVE` that `^11.0.0 || ^20.0.0` raised. Realm 11 is no longer supported. Release as a major version
 
 ## [3.0.0-beta.2] - 2026-08-19
 

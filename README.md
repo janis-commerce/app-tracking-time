@@ -13,7 +13,7 @@ To ensure the proper functioning of this library, make sure that the following d
 - **`react`**: `>=18.2.0 <20.0.0`
 - **`react-native`**: `>=0.71.5 <0.82.0`
 - **`react-native-fs`**: `^2.20.0`
-- **`realm`**: `^11.0.0 || ^20.0.0`
+- **`realm`**: `^12.0.0 || ^20.0.0`
 
 These dependencies are required for the library to work correctly. Ensure that your project has these versions installed to avoid compatibility issues.
 
