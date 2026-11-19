@@ -17,7 +17,7 @@ To ensure the proper functioning of this library, make sure that the following d
 
 These dependencies are required for the library to work correctly. Ensure that your project has these versions installed to avoid compatibility issues.
 
-> **Upgrading from 2.x**: `date-fns` and `realm` used to be bundled as dependencies of this package, so they arrived transitively, and `react-native-fs` was not declared at all even though it is used at runtime. From 3.0.0 the three are peer dependencies — if your app does not already depend on them, declare them explicitly. Installing with `--legacy-peer-deps` (or yarn 1) does not resolve peers and reports nothing, so a missing peer only surfaces at runtime: `date-fns` on the first time calculation, and `react-native-fs` as soon as `EventTracker` is instantiated.
+> **Upgrading from 2.x**: `date-fns` and `realm` used to be regular dependencies of this package, so they arrived transitively, and `react-native-fs` was not declared at all even though the package imports it. From 3.0.0 the three are peer dependencies — if your app does not already depend on them, declare them explicitly — and `realm` 11 is no longer supported (use 12 or 20). With `--legacy-peer-deps` npm ignores peers and reports nothing (yarn 1 only warns). The package imports them at the top of its modules, so a missing peer breaks the bundle rather than a later call: Metro fails with `Unable to resolve module date-fns` (or `react-native-fs`, `realm`).
 
 ## Installation
 

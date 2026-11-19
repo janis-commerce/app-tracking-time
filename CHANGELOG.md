@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING**: declared react-native-fs as a peer dependency (it stays in devDependencies for CI). It was only in devDependencies while `lib/database.js` imports it at runtime — `RNFS.DocumentDirectoryPath` runs in the `Database` constructor, so a consumer without it fails when instantiating `EventTracker`, not in an optional method. It used to work only because almost every RN app already installs it. Release as a major version
+- **BREAKING**: `react-native-fs` is now a declared peer dependency (`^2.20.0`), so the package no longer relies on the app happening to install it: it always imported it without declaring it. Apps must declare it themselves — with `--legacy-peer-deps` a missing peer is neither installed nor reported (yarn 1 only warns), and Metro then fails to bundle with `Unable to resolve module react-native-fs`. Release as a major version
 - **BREAKING**: the `realm` peer range is now `^12.0.0 || ^20.0.0`, so an app on Realm 12 installs without needing an `overrides` or `--legacy-peer-deps` to get past the `ERESOLVE` that `^11.0.0 || ^20.0.0` raised. Realm 11 is no longer supported. Release as a major version
 
 ## [3.0.0-beta.2] - 2026-08-19
@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Widened the 100% coverage gate to every source file (`lib/**` and `utils/**`, excluding the Realm-native `database.js`) — it previously measured only `event-tracker.js`; added dedicated test suites for the state machine (`validations`), `helpers` and `event`
-- **BREAKING**: moved date-fns from dependencies to devDependencies (pinned to ^4.1.0 for CI) keeping the wide peer range: declaring it as both a dependency and a peer allowed npm to materialize a nested copy alongside the consumer's one. A consumer that does not declare date-fns no longer receives it transitively: `npm install` resolves peers on its own, but with `--legacy-peer-deps` (or yarn 1) it is not installed and nothing is reported at install time — the `import` fails at runtime with `Cannot find module 'date-fns'`. Release as a major version
+- **BREAKING**: `date-fns` is now only a peer dependency (`>=2.0.0 <5.0.0`), so the package always runs on the app's own copy instead of risking a second one nested inside it — it used to be declared both as a dependency and as a peer. An app that does not declare it no longer receives it transitively: plain `npm install` adds the peer on its own, but with `--legacy-peer-deps` it is neither installed nor reported (yarn 1 only warns), and Metro then fails to bundle with `Unable to resolve module date-fns`. Release as a major version
 
 ### Fixed
 
