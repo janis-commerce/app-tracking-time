@@ -355,7 +355,7 @@ describe('EventTracker class', () => {
 				expect(response).toStrictEqual(DEFAULT_ELAPSED_TIME);
 			});
 
-			it('should return 0 when elapsed time is 0 or less than 0', () => {
+			it('should return 0 when start and finish share the same time', () => {
 				const events = [
 					{id: '345', type: 'start', time: '2023-01-01T00:00:10.000Z'},
 					{id: '345', type: 'finish', time: '2023-01-01T00:00:10.000Z'},
