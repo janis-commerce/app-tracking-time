@@ -167,6 +167,57 @@ describe('EventTracker class', () => {
 				);
 			});
 		});
+
+		describe('when the device clock goes back', () => {
+			const storedEvents = [];
+
+			beforeEach(() => {
+				storedEvents.length = 0;
+				saveFn.mockImplementation(async (event) => {
+					storedEvents.push(event);
+				});
+				searchFn.mockImplementation(async () =>
+					storedEvents.map((event) => ({...event, payload: '{}'})),
+				);
+			});
+
+			afterEach(() => {
+				saveFn.mockReset();
+				searchFn.mockReset();
+			});
+
+			it('stores a late event right after the last one, so the next cycle can still be finished', async () => {
+				await eventTracker.addEvent({id: '345', type: 'start', time: '2023-01-01T10:00:00.000Z'});
+				await eventTracker.addEvent({id: '345', type: 'finish', time: '2023-01-01T10:05:00.000Z'});
+
+				const reopened = await eventTracker.addEvent({
+					id: '345',
+					type: 'start',
+					time: '2023-01-01T09:56:00.000Z',
+				});
+				const finished = await eventTracker.addEvent({
+					id: '345',
+					type: 'finish',
+					time: '2023-01-01T09:57:00.000Z',
+				});
+
+				expect(reopened.time).toBe('2023-01-01T10:05:00.001Z');
+				expect(finished.time).toBe('2023-01-01T10:05:00.002Z');
+				expect(eventTracker.getNetTrackingTime({events: storedEvents})).toBe(300001);
+			});
+
+			it('keeps a time equal to the last event as received', async () => {
+				await eventTracker.addEvent({id: '345', type: 'start', time: '2023-01-01T10:00:00.000Z'});
+
+				const finished = await eventTracker.addEvent({
+					id: '345',
+					type: 'finish',
+					time: '2023-01-01T10:00:00.000Z',
+				});
+
+				expect(finished.time).toBe('2023-01-01T10:00:00.000Z');
+			});
+		});
 	});
 	describe('getEventsById method', () => {
 		describe('throws an error when', () => {

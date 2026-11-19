@@ -37,6 +37,21 @@ class Helpers {
 			.sort((eventA, eventB) => new Date(eventA.time) - new Date(eventB.time));
 	}
 
+	/**
+	 * @name notEarlierThan
+	 * @description returns `time`, or 1 ms after `lastTime` when `time` is earlier. The
+	 * sequence is validated against the chronologically last event, so an event placed
+	 * before it (a device clock that went back) would break the next validation.
+	 * @param {string} time ISO time of the new event
+	 * @param {string} [lastTime] ISO time of the record's last event
+	 * @returns {string}
+	 */
+	static notEarlierThan(time, lastTime) {
+		if (!lastTime || new Date(time) >= new Date(lastTime)) return time;
+
+		return new Date(new Date(lastTime).getTime() + 1).toISOString();
+	}
+
 	static getTimeDifference(start, end, format) {
 		const parsedStart = new Date(start);
 		const parsedEnd = new Date(end);

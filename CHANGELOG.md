@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: the `realm` peer range is now `^12.0.0 || ^20.0.0`, so an app on Realm 12 installs without needing an `overrides` or `--legacy-peer-deps` to get past the `ERESOLVE` that `^11.0.0 || ^20.0.0` raised. Realm 11 is no longer supported. Release as a major version
 - **Internal** The beta publish workflow now runs lint and the test suite before publishing, so a prerelease tag no longer reaches npm without passing them
 
+### Fixed
+
+- A record whose device clock goes back now keeps validating its sequence: an event earlier than the record's last one is stored 1 ms after it, so the events that follow are no longer rejected — a `finish` failing as "already finished" used to leave the cycle open and inflate the net time. The time worked while the clock is behind is left out of the net time
+
 ## [3.0.0-beta.2] - 2026-08-19
 
 ### Added

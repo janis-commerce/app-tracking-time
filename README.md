@@ -62,6 +62,8 @@ This action will save a start type event associated with the id 66e99577e128deb1
 
 `EVENT_TYPES` is the exported vocabulary of the package (`START`, `PAUSE`, `RESUME`, `FINISH`); use it instead of writing the literals on your side. The type is normalized before being validated and stored, so `'START'` and `'start'` end up as the same record.
 
+`time` is optional and defaults to the current time. If it is earlier than the record's last event (for example, the device clock went back), the event is stored 1 ms after that event: the sequence keeps validating, and the time worked while the clock is behind is left out of the net time instead of inflating it.
+
 
 ### Search all events associated with your id:
 
