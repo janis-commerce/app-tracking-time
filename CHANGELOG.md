@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING**: `react-native-fs` is now a declared peer dependency (`^2.20.0`), so the package no longer relies on the app happening to install it: it always imported it without declaring it. Apps must declare it themselves — with `--legacy-peer-deps` a missing peer is neither installed nor reported (yarn 1 only warns), and Metro then fails to bundle with `Unable to resolve module react-native-fs`. Release as a major version
 - **BREAKING**: the `realm` peer range is now `^12.0.0 || ^20.0.0`, so an app on Realm 12 installs without needing an `overrides` or `--legacy-peer-deps` to get past the `ERESOLVE` that `^11.0.0 || ^20.0.0` raised. Realm 11 is no longer supported. Release as a major version
+- **Internal** The beta publish workflow now runs lint and the test suite before publishing, so a prerelease tag no longer reaches npm without passing them
 
 ## [3.0.0-beta.2] - 2026-08-19
 

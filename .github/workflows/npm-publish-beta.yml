@@ -24,6 +24,12 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
+            - name: Lint
+              run: npm run lint
+
+            - name: Run tests
+              run: npm run test:coverage
+
     publish-npm:
         needs: build
         runs-on: ubuntu-latest
