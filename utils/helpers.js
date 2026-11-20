@@ -20,12 +20,36 @@ class Helpers {
 		return !!(arr instanceof Array);
 	}
 
-	static findEventByStatus(arr, status) {
-		return arr.find((value) => value?.type === status);
+	/**
+	 * @name sortValidEventsByTime
+	 * @description discards events with an invalid `time` and returns the rest in
+	 * chronological order. Storage order is not guaranteed, and the filter is not
+	 * cosmetic: an invalid date makes the comparator return NaN, which leaves the
+	 * whole array unsorted, so filtering and sorting have to travel together.
+	 * @param {Array<{time: string}>} events
+	 * @returns {Array<{time: string}>}
+	 */
+	static sortValidEventsByTime(events) {
+		if (!this.isArray(events)) return [];
+
+		return events
+			.filter((event) => !Number.isNaN(new Date(event?.time).getTime()))
+			.sort((eventA, eventB) => new Date(eventA.time) - new Date(eventB.time));
 	}
 
-	static reverseArray(arr) {
-		return arr.slice().reverse();
+	/**
+	 * @name notEarlierThan
+	 * @description returns `time`, or 1 ms after `lastTime` when `time` is earlier. The
+	 * sequence is validated against the chronologically last event, so an event placed
+	 * before it (a device clock that went back) would break the next validation.
+	 * @param {string} time ISO time of the new event
+	 * @param {string} [lastTime] ISO time of the record's last event
+	 * @returns {string}
+	 */
+	static notEarlierThan(time, lastTime) {
+		if (!lastTime || new Date(time) >= new Date(lastTime)) return time;
+
+		return new Date(new Date(lastTime).getTime() + 1).toISOString();
 	}
 
 	static getTimeDifference(start, end, format) {

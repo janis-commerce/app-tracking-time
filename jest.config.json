@@ -1,35 +1,58 @@
 {
-	"roots": ["<rootDir>"],
-	"setupFiles": ["<rootDir>/setupTest/jest.setup.js"],
-	"setupFilesAfterEnv": ["<rootDir>/setupTest/jest.setup.js"],
+	"roots": [
+		"<rootDir>"
+	],
+	"setupFiles": [
+		"<rootDir>/setupTest/jest.setup.js"
+	],
+	"setupFilesAfterEnv": [
+		"<rootDir>/setupTest/jest.setup.js"
+	],
 	"verbose": true,
-	"moduleDirectories": ["node_modules", "lib"],
+	"moduleDirectories": [
+		"node_modules",
+		"lib"
+	],
 	"clearMocks": true,
-	"moduleFileExtensions": ["js", "json", "node"],
-	"testMatch": ["**/__tests__/**/*.js", "**/?(*.)+(spec|test).js"],
-	"coverageReporters": ["html", "text"],
+	"moduleFileExtensions": [
+		"js",
+		"json",
+		"node"
+	],
+	"testMatch": [
+		"**/__tests__/**/*.js",
+		"**/?(*.)+(spec|test).js"
+	],
+	"coverageReporters": [
+		"html",
+		"text"
+	],
 	"coverageDirectory": "coverage",
 	"collectCoverageFrom": [
-	  "lib/event-tracker.js**",
-	  "!**/node_modules/**",
-	  "!**/vendor/**",
-	  "!**/env/**",
-	  "!<rootDir>/coverage",
-	  "!**/jestMocks/**"
+		"lib/**/*.js",
+		"utils/**/*.js",
+		"!lib/database.js",
+		"!**/node_modules/**",
+		"!**/vendor/**",
+		"!**/env/**",
+		"!<rootDir>/coverage",
+		"!**/jestMocks/**"
 	],
-	"coveragePathIgnorePatterns": ["/node_modules/"],
+	"coveragePathIgnorePatterns": [
+		"/node_modules/"
+	],
 	"coverageThreshold": {
-	  "global": {
-		"branches": 100,
-		"functions": 100,
-		"lines": 100,
-		"statements": 100
-	  }
+		"global": {
+			"branches": 100,
+			"functions": 100,
+			"lines": 100,
+			"statements": 100
+		}
 	},
 	"transform": {
-	  "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
+		"^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
 	},
 	"transformIgnorePatterns": [
-	  "node_modules/(?!(react-native)/)"
+		"node_modules/(?!(react-native)/)"
 	]
-  }
+}

@@ -9,12 +9,15 @@ To ensure the proper functioning of this library, make sure that the following d
 
 ### Required Peer Dependencies
 
-- **`date-fns`**: `>=2.0.0 <3.0.0`
-- **`react`**: `>=18.2.0`
-- **`react-native`**: `>=0.71.5`
-- **`realm`**: `^11.0.0`
+- **`date-fns`**: `>=2.0.0 <5.0.0`
+- **`react`**: `>=18.2.0 <20.0.0`
+- **`react-native`**: `>=0.71.5 <0.82.0`
+- **`react-native-fs`**: `^2.20.0`
+- **`realm`**: `^12.0.0 || ^20.0.0`
 
 These dependencies are required for the library to work correctly. Ensure that your project has these versions installed to avoid compatibility issues.
+
+> **Upgrading from 2.x**: `date-fns` and `realm` used to be regular dependencies of this package, so they arrived transitively, and `react-native-fs` was not declared at all even though the package imports it. From 3.0.0 the three are peer dependencies — if your app does not already depend on them, declare them explicitly — and `realm` 11 is no longer supported (use 12 or 20). With `--legacy-peer-deps` npm ignores peers and reports nothing (yarn 1 only warns). The package imports them at the top of its modules, so a missing peer breaks the bundle rather than a later call: Metro fails with `Unable to resolve module date-fns` (or `react-native-fs`, `realm`).
 
 ## Installation
 
@@ -41,10 +44,11 @@ export default EventTracker;
 To save an event you must call the addEvent method of the EventTracker class and pass it an object with the following parameters:
 
 ```js
+import {EVENT_TYPES} from '@janiscommerce/app-tracking-time';
 
 const saveInitEvent = async (id) => {
     try {
-        await EventTracker.addEvent({id,type:'start'})
+        await EventTracker.addEvent({id,type:EVENT_TYPES.START})
     } catch(error) {
         console.warn(error);
     }
@@ -55,6 +59,10 @@ const saveInitEvent = async (id) => {
 ```
 
 This action will save a start type event associated with the id 66e99577e128deb19d57cd74
+
+`EVENT_TYPES` is the exported vocabulary of the package (`START`, `PAUSE`, `RESUME`, `FINISH`); use it instead of writing the literals on your side. The type is normalized before being validated and stored, so `'START'` and `'start'` end up as the same record.
+
+`time` is optional and defaults to the current time. If it is earlier than the record's last event (for example, the device clock went back), the event is stored 1 ms after that event: the sequence keeps validating, and the time worked while the clock is behind is left out of the net time instead of inflating it.
 
 
 ### Search all events associated with your id:
@@ -101,6 +109,12 @@ If any of the events you want to pause is already paused, what will happen is th
 ### Sequence of recorded events
 
 The package has internal validations that prevent events from being saved consecutively or that do not have coherence depending on the event that has been saved prior to this one.
-For example, you will not be able to store 2 pause type events consecutively. Additionally, saving any event related to an ID that has already been finished is also not allowed.
+For example, you will not be able to store 2 pause type events consecutively.
 
-If you want to know what was the last event that was stored for a particular id, you can call the getLastEventById method, which will return an object with the information of the last stored event, including the type.
+A record supports **multiple `start → finish` cycles**: a `finish` event closes the current cycle, and a new `start` right after it opens a new cycle without deleting the previous ones. A `finish` over an already finished record, or a `start` while a cycle is still in progress (`start`, `pause` or `resume` as the last event), is rejected. `getNetTrackingTime` returns the sum of every active span (`start|resume → pause|finish`) across all cycles; a trailing open span (record in progress) is not counted — compute live time on the caller side.
+
+If you want to know what was the last event of a particular id, you can call the getLastEventById method, which will return an object with the information of that event, including the type.
+
+`getEventsById` returns the events in chronological order, `getLastEventById` returns the chronologically last one, and `getIdTimeByType` returns the `time` of the chronologically last one of that type. Storage order is not guaranteed, so the three sort by `time` and discard records with an invalid `time` (a single corrupted date would otherwise leave the whole read unsorted). `getNetTrackingTime` does the same with the events it receives.
+
+`searchEventByQuery` is the exception: it returns the records as the query yields them, in storage order unless the query itself sorts. If order matters, sort in the query (`searchEventByQuery('id == $0 SORT(time ASC)', id)`) or use the methods above.

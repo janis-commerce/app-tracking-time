@@ -18,6 +18,9 @@ jest.mock('react-native', () => {
 	};
 });
 
+// Realm 12's Node binding keeps the event loop alive, so Jest never exits if the real module loads
+jest.mock('realm', () => ({Object: class {}}));
+
 jest.mock('react-native-fs', () => ({
 	mkdir: jest.fn(),
 	moveFile: jest.fn(),
