@@ -13,7 +13,7 @@ describe('EventTracker class', () => {
 	};
 
 	const eventTracker = new EventTracker('timetracker');
-	const saveFn = Database.prototype.save;
+	const writeEventsFn = Database.prototype.writeEvents;
 	const searchFn = Database.prototype.search;
 	const deleteFn = Database.prototype.delete;
 	const deleteAllFn = Database.prototype.deleteAll;
@@ -22,6 +22,12 @@ describe('EventTracker class', () => {
 	const diffTimeMock = jest.spyOn(Helpers, 'getTimeDifference');
 	const mockDate = new Date('2023-01-01T00:15:00.000Z');
 	jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+	// Runs what the tracker builds against the given stored events, as the write transaction does
+	const givenStoredEvents = (storedEvents) =>
+		writeEventsFn.mockImplementationOnce(async (filters, values, getEventsToSave) =>
+			getEventsToSave(storedEvents),
+		);
 
 	describe('return methods to handler time events', () => {
 		it('when the class is instantiated', () => {
@@ -43,7 +49,7 @@ describe('EventTracker class', () => {
 
 		describe('add an event when', () => {
 			it('id and type are valids', async () => {
-				searchFn.mockResolvedValueOnce([]);
+				givenStoredEvents([]);
 				const response = await eventTracker.addEvent({id: '345', type: 'start'});
 				expect(response).toBeTruthy();
 			});
@@ -51,16 +57,17 @@ describe('EventTracker class', () => {
 
 		describe('normalizes the received type so that', () => {
 			it('the persisted event keeps the canonical lowercase type', async () => {
-				searchFn.mockResolvedValueOnce([]);
-				saveFn.mockResolvedValueOnce();
+				givenStoredEvents([]);
 
 				await eventTracker.addEvent({id: '345', type: 'START', time: '2023-01-01T00:00:00.000Z'});
 
-				expect(saveFn).toHaveBeenCalledWith(expect.objectContaining({id: '345', type: 'start'}));
+				await expect(writeEventsFn.mock.results[0].value).resolves.toStrictEqual([
+					expect.objectContaining({id: '345', type: 'start'}),
+				]);
 			});
 
 			it('an uppercase type does not bypass the sequence validation', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
 				]);
 
@@ -82,7 +89,7 @@ describe('EventTracker class', () => {
 	describe('multi-cycle events sequence', () => {
 		describe('allows', () => {
 			it('a new start after a finish (reopens the record with a new cycle)', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
 					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
 				]);
@@ -93,7 +100,7 @@ describe('EventTracker class', () => {
 			});
 
 			it('a new start when the history carries an event with a corrupted time', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
 					{id: '345', type: 'pause', time: 'garbage', payload: '{}'},
 					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
@@ -105,7 +112,7 @@ describe('EventTracker class', () => {
 			});
 
 			it('a pause within a reopened cycle', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
 					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z', payload: '{}'},
 				]);
@@ -118,7 +125,7 @@ describe('EventTracker class', () => {
 
 		describe('rejects', () => {
 			it('a second start while a cycle is open', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
 				]);
 
@@ -128,7 +135,7 @@ describe('EventTracker class', () => {
 			});
 
 			it('a start while the cycle is paused', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'pause', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
 				]);
 
@@ -138,7 +145,7 @@ describe('EventTracker class', () => {
 			});
 
 			it('a finish over an already finished record', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
 				]);
 
@@ -148,7 +155,7 @@ describe('EventTracker class', () => {
 			});
 
 			it('a resume after a finish', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
 				]);
 
@@ -158,7 +165,7 @@ describe('EventTracker class', () => {
 			});
 
 			it('a pause after a finish', async () => {
-				searchFn.mockResolvedValueOnce([
+				givenStoredEvents([
 					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
 				]);
 
@@ -173,17 +180,17 @@ describe('EventTracker class', () => {
 
 			beforeEach(() => {
 				storedEvents.length = 0;
-				saveFn.mockImplementation(async (event) => {
-					storedEvents.push(event);
+				writeEventsFn.mockImplementation(async (filters, values, getEventsToSave) => {
+					const savedEvents = getEventsToSave(
+						storedEvents.map((event) => ({...event, payload: '{}'})),
+					);
+					storedEvents.push(...savedEvents);
+					return savedEvents;
 				});
-				searchFn.mockImplementation(async () =>
-					storedEvents.map((event) => ({...event, payload: '{}'})),
-				);
 			});
 
 			afterEach(() => {
-				saveFn.mockReset();
-				searchFn.mockReset();
+				writeEventsFn.mockReset();
 			});
 
 			it('stores a late event right after the last one, so the next cycle can still be finished', async () => {
@@ -218,7 +225,124 @@ describe('EventTracker class', () => {
 				expect(finished.time).toBe('2023-01-01T10:00:00.000Z');
 			});
 		});
+
+		describe('when two writes on a record arrive at the same time', () => {
+			const storedEvents = [];
+
+			beforeEach(() => {
+				storedEvents.length = 0;
+				storedEvents.push({
+					id: '345',
+					type: 'start',
+					time: '2023-01-01T10:00:00.000Z',
+					payload: '{}',
+				});
+				writeEventsFn.mockImplementation(async (filters, values, getEventsToSave) => {
+					const savedEvents = getEventsToSave([...storedEvents]);
+					storedEvents.push(...savedEvents);
+					return savedEvents;
+				});
+			});
+
+			afterEach(() => {
+				writeEventsFn.mockReset();
+			});
+
+			it('saves a single finish and rejects the other one', async () => {
+				const results = await Promise.allSettled([
+					eventTracker.addEvent({id: '345', type: 'finish', time: '2023-01-01T10:05:00.000Z'}),
+					eventTracker.addEvent({id: '345', type: 'finish', time: '2023-01-01T10:05:00.010Z'}),
+				]);
+
+				expect(results.map(({status}) => status)).toStrictEqual(['fulfilled', 'rejected']);
+				expect(results[1].reason.message).toMatch('record is already finished');
+				expect(storedEvents.map(({type}) => type)).toStrictEqual(['start', 'finish']);
+			});
+		});
 	});
+
+	describe('addEvents method', () => {
+		describe('throws an error when', () => {
+			it('passed id is invalid', async () => {
+				await expect(eventTracker.addEvents(null, [])).rejects.toThrow('ID is invalid or null');
+			});
+
+			it('the events are not an array', async () => {
+				await expect(eventTracker.addEvents('345', 'start')).rejects.toThrow(
+					'Events must be an array',
+				);
+			});
+
+			it('the history does not follow the stored events, so nothing is saved', async () => {
+				givenStoredEvents([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+				]);
+
+				await expect(
+					eventTracker.addEvents('345', [
+						{type: 'start', time: '2023-01-01T00:01:00.000Z'},
+						{type: 'finish', time: '2023-01-01T00:02:00.000Z'},
+					]),
+				).rejects.toThrow('only one start record is allowed per cycle');
+			});
+		});
+
+		describe('saves the history in a single write', () => {
+			it('in chronological order, keeping the first of the stacked finishes', async () => {
+				givenStoredEvents([]);
+
+				const response = await eventTracker.addEvents('345', [
+					{type: 'finish', time: '2023-01-01T00:30:00.000Z'},
+					{type: 'start', time: '2023-01-01T00:00:00.000Z'},
+					{type: 'finish', time: '2023-01-01T00:10:00.000Z'},
+				]);
+
+				expect(writeEventsFn).toHaveBeenCalledTimes(1);
+				expect(response).toStrictEqual([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:10:00.000Z'},
+				]);
+			});
+
+			it('with the normalized type, a canonical time and the payload of each event', async () => {
+				givenStoredEvents([]);
+
+				await eventTracker.addEvents('345', [
+					{type: 'START', time: '2023-01-01T00:00:00Z', payload: {userId: '123'}},
+				]);
+
+				await expect(writeEventsFn.mock.results[0].value).resolves.toStrictEqual([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: {userId: '123'}},
+				]);
+			});
+
+			it('after the events the record already has', async () => {
+				givenStoredEvents([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.addEvents('345', [
+					{type: 'start', time: '2023-01-01T00:10:00.000Z'},
+					{type: 'finish', time: '2023-01-01T00:20:00.000Z'},
+				]);
+
+				expect(response.map(({type}) => type)).toStrictEqual(['start', 'finish']);
+			});
+		});
+
+		it('does not write when no event of the history is valid', async () => {
+			const response = await eventTracker.addEvents('345', [
+				{type: 'finish', time: 'garbage'},
+				{type: 'pause', time: '2023-01-01T00:00:00.000Z'},
+				null,
+			]);
+
+			expect(response).toStrictEqual([]);
+			expect(writeEventsFn).not.toHaveBeenCalled();
+		});
+	});
+
 	describe('getEventsById method', () => {
 		describe('throws an error when', () => {
 			it('id isnt valid', () => {
@@ -252,6 +376,41 @@ describe('EventTracker class', () => {
 				expect(response.map((event) => event.type)).toStrictEqual(['start', 'finish']);
 			});
 		});
+
+		describe('return a valid sequence, dropping', () => {
+			it('the stacked finishes a 2.x database keeps, except the first one', async () => {
+				searchFn.mockResolvedValueOnce([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:10:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:30:00.000Z', payload: '{}'},
+				]);
+
+				const response = await eventTracker.getEventsById('345');
+
+				expect(response).toStrictEqual([
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: {}},
+					{id: '345', type: 'finish', time: '2023-01-01T00:10:00.000Z', payload: {}},
+				]);
+			});
+
+			it('nothing from a valid multi-cycle history', async () => {
+				const storedEvents = [
+					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+					{id: '345', type: 'pause', time: '2023-01-01T00:01:00.000Z', payload: '{}'},
+					{id: '345', type: 'resume', time: '2023-01-01T00:02:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:03:00.000Z', payload: '{}'},
+					{id: '345', type: 'start', time: '2023-01-01T00:10:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:20:00.000Z', payload: '{}'},
+				];
+				searchFn.mockResolvedValueOnce(storedEvents);
+
+				const response = await eventTracker.getEventsById('345');
+
+				expect(response.map(({type, time}) => ({type, time}))).toStrictEqual(
+					storedEvents.map(({type, time}) => ({type, time})),
+				);
+			});
+		});
 	});
 
 	describe('getLastEventById mehtod', () => {
@@ -281,6 +440,14 @@ describe('EventTracker class', () => {
 				time: '2023-01-01T00:00:00.000Z',
 				payload: {userId: '123', warehouseId: '123-wh'},
 			});
+		});
+
+		it('returns an empty object when the record has no events', async () => {
+			searchFn.mockResolvedValueOnce([]);
+
+			const lastEvent = await eventTracker.getLastEventById('345');
+
+			expect(lastEvent).toStrictEqual({});
 		});
 
 		it('returns the chronologically last event even when storage order is shuffled', async () => {
