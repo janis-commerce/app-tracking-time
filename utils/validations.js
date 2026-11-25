@@ -97,6 +97,34 @@ class Validations {
 				throw new EventTrackerError('Event type is invalid');
 		}
 	}
+
+	/**
+	 * Returns, in chronological order, the events that form a valid sequence: an event with an
+	 * invalid time, or one the sequence rejects after the last event kept, is dropped. A run of
+	 * repeated events keeps its first one, the same reading the net time does, so a dirty history
+	 * under-counts instead of inflating.
+	 *
+	 * @param {Array<{type: string, time: string}>} events
+	 * @returns {Array<{type: string, time: string}>}
+	 */
+	static getValidSequence(events) {
+		return Helpers.sortValidEventsByTime(events).reduce((sequence, event) => {
+			const lastKept = sequence[sequence.length - 1];
+
+			if (this._isValidNextEvent(event?.type, lastKept?.type)) sequence.push(event);
+
+			return sequence;
+		}, []);
+	}
+
+	static _isValidNextEvent(type, previousType) {
+		try {
+			this.validateEventsSequence(type, previousType);
+			return true;
+		} catch (error) {
+			return false;
+		}
+	}
 }
 
 export default Validations;

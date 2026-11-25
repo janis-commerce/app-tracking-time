@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0-beta.0] - 2026-11-25
+
+### Added
+
+- Apps can now restore the whole history of a record in one call, `addEvents(id, events)`: it is saved in a single write, all of it or nothing, and normalized with the same rule as `getEventsById`, so a history with stacked `finish` events is saved with the first one, where adding it event by event fails at the second, and the database is opened once instead of once per event. The events can come in any order; if the record already has events, nothing is saved and the promise is rejected (https://janiscommerce.atlassian.net/browse/APPSRN-566)
+
+### Fixed
+
+- Two events written on a record at the same time can no longer both pass the sequence validation: `addEvent` now validates and saves in the same write, so the second one is rejected instead of leaving, for example, two consecutive `finish` events (https://janiscommerce.atlassian.net/browse/APPSRN-566)
+- `getEventsById` now returns a valid sequence: an event the sequence rejects after the previous one is left out, so a database written by 2.x returns only the first of its stacked `finish` events, the one `getNetTrackingTime` already counts, and an app that sends the events to its backend no longer sends the extra ones (https://janiscommerce.atlassian.net/browse/APPSRN-566)
+
 ## [3.0.0] - 2026-11-20
 
 ### Added

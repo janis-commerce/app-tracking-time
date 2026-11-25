@@ -64,6 +64,27 @@ This action will save a start type event associated with the id 66e99577e128deb1
 
 `time` is optional and defaults to the current time. If it is earlier than the record's last event (for example, the device clock went back), the event is stored 1 ms after that event: the sequence keeps validating, and the time worked while the clock is behind is left out of the net time instead of inflating it.
 
+The event is validated and saved in the same write, so two calls that arrive at the same time on a record cannot both pass the validation: the second one is rejected.
+
+
+### Save the whole history of a record:
+
+To restore the history of a record (for example, the events your backend keeps for it), call `addEvents` with the id and the events, in any order. The history is saved in a single write: all of it, or nothing.
+
+```js
+const restoreHistory = async (id, events) => {
+    try {
+        const savedEvents = await EventTracker.addEvents(id, events)
+
+        console.log(savedEvents);
+    } catch(error) {
+        console.warn(error);
+    }
+}
+```
+
+The history is normalized with the same rule as `getEventsById` (see [Sequence of recorded events](#sequence-of-recorded-events)). It is the whole history of the record, so the record must not have events yet: if it has any, nothing is saved and the promise is rejected. That check runs in the same write as the save, so of two simultaneous restores of a record only one is saved. It resolves with the events saved, in chronological order.
+
 
 ### Search all events associated with your id:
 
@@ -116,5 +137,7 @@ A record supports **multiple `start → finish` cycles**: a `finish` event close
 If you want to know what was the last event of a particular id, you can call the getLastEventById method, which will return an object with the information of that event, including the type.
 
 `getEventsById` returns the events in chronological order, `getLastEventById` returns the chronologically last one, and `getIdTimeByType` returns the `time` of the chronologically last one of that type. Storage order is not guaranteed, so the three sort by `time` and discard records with an invalid `time` (a single corrupted date would otherwise leave the whole read unsorted). `getNetTrackingTime` does the same with the events it receives.
+
+`getEventsById` also returns a valid sequence: it drops the events the sequence rejects after the previous one, like the stacked `finish` events that a database written by the 2.x versions keeps. A run of repeated events keeps its first one, the same reading `getNetTrackingTime` does, so a dirty history under-counts instead of inflating.
 
 `searchEventByQuery` is the exception: it returns the records as the query yields them, in storage order unless the query itself sorts. If order matters, sort in the query (`searchEventByQuery('id == $0 SORT(time ASC)', id)`) or use the methods above.
