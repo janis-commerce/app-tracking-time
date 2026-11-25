@@ -83,7 +83,7 @@ const restoreHistory = async (id, events) => {
 }
 ```
 
-The history is normalized with the same rule as `getEventsById` (see [Sequence of recorded events](#sequence-of-recorded-events)), and it has to follow the events the record already has: if it breaks the sequence after them, nothing is saved and the promise is rejected. It resolves with the events saved, in chronological order.
+The history is normalized with the same rule as `getEventsById` (see [Sequence of recorded events](#sequence-of-recorded-events)). It is the whole history of the record, so the record must not have events yet: if it has any, nothing is saved and the promise is rejected. That check runs in the same write as the save, so of two simultaneous restores of a record only one is saved. It resolves with the events saved, in chronological order.
 
 
 ### Search all events associated with your id:

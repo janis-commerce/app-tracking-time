@@ -29,6 +29,22 @@ describe('EventTracker class', () => {
 			getEventsToSave(storedEvents),
 		);
 
+	// Each write reads what the previous ones saved, as the database does
+	const keepWrittenEvents = (storedEvents) => {
+		beforeEach(() => {
+			storedEvents.length = 0;
+			writeEventsFn.mockImplementation(async (filters, values, getEventsToSave) => {
+				const savedEvents = getEventsToSave([...storedEvents]);
+				storedEvents.push(...savedEvents);
+				return savedEvents;
+			});
+		});
+
+		afterEach(() => {
+			writeEventsFn.mockReset();
+		});
+	};
+
 	describe('return methods to handler time events', () => {
 		it('when the class is instantiated', () => {
 			expect(typeof eventTracker.addEvent).toBe('function');
@@ -178,20 +194,7 @@ describe('EventTracker class', () => {
 		describe('when the device clock goes back', () => {
 			const storedEvents = [];
 
-			beforeEach(() => {
-				storedEvents.length = 0;
-				writeEventsFn.mockImplementation(async (filters, values, getEventsToSave) => {
-					const savedEvents = getEventsToSave(
-						storedEvents.map((event) => ({...event, payload: '{}'})),
-					);
-					storedEvents.push(...savedEvents);
-					return savedEvents;
-				});
-			});
-
-			afterEach(() => {
-				writeEventsFn.mockReset();
-			});
+			keepWrittenEvents(storedEvents);
 
 			it('stores a late event right after the last one, so the next cycle can still be finished', async () => {
 				await eventTracker.addEvent({id: '345', type: 'start', time: '2023-01-01T10:00:00.000Z'});
@@ -229,23 +232,15 @@ describe('EventTracker class', () => {
 		describe('when two writes on a record arrive at the same time', () => {
 			const storedEvents = [];
 
+			keepWrittenEvents(storedEvents);
+
 			beforeEach(() => {
-				storedEvents.length = 0;
 				storedEvents.push({
 					id: '345',
 					type: 'start',
 					time: '2023-01-01T10:00:00.000Z',
 					payload: '{}',
 				});
-				writeEventsFn.mockImplementation(async (filters, values, getEventsToSave) => {
-					const savedEvents = getEventsToSave([...storedEvents]);
-					storedEvents.push(...savedEvents);
-					return savedEvents;
-				});
-			});
-
-			afterEach(() => {
-				writeEventsFn.mockReset();
 			});
 
 			it('saves a single finish and rejects the other one', async () => {
@@ -273,17 +268,18 @@ describe('EventTracker class', () => {
 				);
 			});
 
-			it('the history does not follow the stored events, so nothing is saved', async () => {
+			it('the record already has events, even the same history, so nothing is saved', async () => {
 				givenStoredEvents([
 					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
+					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
 				]);
 
 				await expect(
 					eventTracker.addEvents('345', [
-						{type: 'start', time: '2023-01-01T00:01:00.000Z'},
-						{type: 'finish', time: '2023-01-01T00:02:00.000Z'},
+						{type: 'start', time: '2023-01-01T00:00:00.000Z'},
+						{type: 'finish', time: '2023-01-01T00:05:00.000Z'},
 					]),
-				).rejects.toThrow('only one start record is allowed per cycle');
+				).rejects.toThrow('Forbidden history: record already has events');
 			});
 		});
 
@@ -315,19 +311,26 @@ describe('EventTracker class', () => {
 					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: {userId: '123'}},
 				]);
 			});
+		});
 
-			it('after the events the record already has', async () => {
-				givenStoredEvents([
-					{id: '345', type: 'start', time: '2023-01-01T00:00:00.000Z', payload: '{}'},
-					{id: '345', type: 'finish', time: '2023-01-01T00:05:00.000Z', payload: '{}'},
+		describe('when two restores of a record arrive at the same time', () => {
+			const storedEvents = [];
+
+			keepWrittenEvents(storedEvents);
+
+			it('saves the history once and rejects the other restore', async () => {
+				const history = [
+					{type: 'start', time: '2023-01-01T00:00:00.000Z'},
+					{type: 'finish', time: '2023-01-01T00:05:00.000Z'},
+				];
+
+				const results = await Promise.allSettled([
+					eventTracker.addEvents('345', history),
+					eventTracker.addEvents('345', history),
 				]);
 
-				const response = await eventTracker.addEvents('345', [
-					{type: 'start', time: '2023-01-01T00:10:00.000Z'},
-					{type: 'finish', time: '2023-01-01T00:20:00.000Z'},
-				]);
-
-				expect(response.map(({type}) => type)).toStrictEqual(['start', 'finish']);
+				expect(results.map(({status}) => status)).toStrictEqual(['fulfilled', 'rejected']);
+				expect(storedEvents.map(({type}) => type)).toStrictEqual(['start', 'finish']);
 			});
 		});
 
