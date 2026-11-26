@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Internal** Bumped the dev dependency `shell-quote` (pulled by `react-native`) from `1.8.3` to `1.12.0` to patch CVE-2026-9277 (GHSA-w7jw-789q-3m8p), where `quote()` let a newline inside an operator token run a second shell command
+
 ## [3.0.0] - 2026-11-20
 
 ### Added
